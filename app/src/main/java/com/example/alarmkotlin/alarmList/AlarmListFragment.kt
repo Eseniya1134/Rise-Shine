@@ -1,24 +1,80 @@
 package com.example.alarmkotlin.alarmList
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.alarmkotlin.R
-
-
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.alarmkotlin.alarmList.data.AlarmDatabase
+import com.example.alarmkotlin.alarmList.data.AlarmItem
+import com.example.alarmkotlin.databinding.FragmentAlarmListBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AlarmListFragment : Fragment() {
 
+    private var _binding: FragmentAlarmListBinding? = null
+    private val binding get() = _binding!!
+
+    private lateinit var adapter: AlarmAdapter
+    private lateinit var db: AlarmDatabase
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_alarm_list, container, false)
+    ): View {
+        _binding = FragmentAlarmListBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
+        db = AlarmDatabase.getDatabase(requireContext())
+
+        adapter = AlarmAdapter(emptyList()) { updatedAlarm ->
+            lifecycleScope.launch {
+                db.alarmDao().update(updatedAlarm)
+                loadAlarms()
+            }
+        }
+
+        binding.recyclerViewAlarms.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerViewAlarms.adapter = adapter
+
+        binding.buttonAddAlarm.setOnClickListener {
+            val newAlarm = AlarmItem(time = "07:00") // временное значение
+            lifecycleScope.launch {
+                db.alarmDao().insert(newAlarm)
+                loadAlarms()
+            }
+        }
+
+        loadAlarms()
+    }
+
+    private fun loadAlarms() {
+        lifecycleScope.launch {
+            val alarms = withContext(Dispatchers.IO) {
+                db.alarmDao().getAll()
+            }
+            adapter.updateList(alarms)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }
+
+/*
+Объяснение:
+- Этот фрагмент отображает список будильников с возможностью добавления и включения/отключения.
+- Используется ViewBinding для доступа к элементам макета Fragment.
+- Room используется для хранения будильников, а корутины — для работы с БД в фоне.
+- loadAlarms загружает актуальный список и передаёт его адаптеру.
+*/
