@@ -1,18 +1,27 @@
 package com.example.alarmkotlin.alarmList
 
+import android.app.AlarmManager
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.alarmkotlin.R
 import com.example.alarmkotlin.alarmList.data.AlarmDatabase
 import com.example.alarmkotlin.alarmList.data.AlarmItem
 import com.example.alarmkotlin.databinding.FragmentAlarmListBinding
+import com.example.alarmkotlin.stopwatch.StopwatchFragment
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 class AlarmListFragment : Fragment() {
 
@@ -51,6 +60,10 @@ class AlarmListFragment : Fragment() {
                 db.alarmDao().insert(newAlarm)
                 loadAlarms()
             }
+
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.frameAlarm, AddItemAlarmFragment())
+                .commit()
         }
 
         loadAlarms()
