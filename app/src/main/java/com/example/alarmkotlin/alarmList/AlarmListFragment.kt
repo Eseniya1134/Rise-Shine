@@ -17,11 +17,13 @@ import kotlinx.coroutines.withContext
 
 class AlarmListFragment : Fragment() {
 
+    // ViewBinding — безопасный доступ к элементам интерфейса
     private var _binding: FragmentAlarmListBinding? = null
     private val binding get() = _binding!!
 
+    // Адаптер для отображения списка будильников
     private lateinit var adapter: AlarmAdapter
-    private lateinit var db: AlarmDatabase
+    private lateinit var db: AlarmDatabase // База данных
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,39 +36,45 @@ class AlarmListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Получаем доступ к базе данных
         db = AlarmDatabase.getDatabase(requireContext())
 
+        // Создаём адаптер и передаём в него callback при переключении будильника
         adapter = AlarmAdapter(emptyList()) { updatedAlarm ->
             lifecycleScope.launch {
                 db.alarmDao().update(updatedAlarm)
-                loadAlarms()
+                loadAlarms() // обновляем список
             }
         }
 
+        // Настраиваем RecyclerView
         binding.recyclerViewAlarms.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerViewAlarms.adapter = adapter
 
-        // 🔄 Слушаем результат от AddItemAlarmFragment
+        // Слушаем результат от AddItemAlarmFragment
         parentFragmentManager.setFragmentResultListener("alarm_time_key", viewLifecycleOwner) { _, bundle ->
             val time = bundle.getString("selected_time") ?: return@setFragmentResultListener
             val newAlarm = AlarmItem(time = time)
 
+            // Сохраняем в базу данных
             lifecycleScope.launch {
                 db.alarmDao().insert(newAlarm)
                 loadAlarms()
             }
         }
 
+        // Кнопка для перехода на экран добавления нового будильника
         binding.buttonAddAlarm.setOnClickListener {
             parentFragmentManager.beginTransaction()
-                .replace(R.id.frameAlarm, AddItemAlarmFragment())
-                .addToBackStack(null)
+                .replace(R.id.frameAlarm, AddItemAlarmFragment()) // заменяем текущий фрагмент
+                .addToBackStack(null) // можно вернуться назад
                 .commit()
         }
 
-        loadAlarms()
+        loadAlarms() // загружаем список будильников при старте
     }
 
+    // Загружает будильники из БД
     private fun loadAlarms() {
         lifecycleScope.launch {
             val alarms = withContext(Dispatchers.IO) {
@@ -76,6 +84,7 @@ class AlarmListFragment : Fragment() {
         }
     }
 
+    // Очищаем binding, чтобы избежать утечек памяти
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

@@ -12,6 +12,7 @@ import java.util.Calendar
 
 class AddItemAlarmFragment : Fragment() {
 
+    // ViewBinding для доступа к элементам layout
     private var _binding: FragmentAddItemAlarmBinding? = null
     private val binding get() = _binding!!
 
@@ -26,7 +27,10 @@ class AddItemAlarmFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Обработка клика по кнопке "Выбрать время"
         binding.chooseClock.setOnClickListener {
+
+            // Инициализируем таймпикер (24ч формат, 12:00 по умолчанию)
             val materialTimePicker = MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_24H)
                 .setHour(12)
@@ -34,6 +38,7 @@ class AddItemAlarmFragment : Fragment() {
                 .setTitleText("Выберите время для будильника")
                 .build()
 
+            // Когда пользователь нажмёт "ОК"
             materialTimePicker.addOnPositiveButtonClickListener {
                 val calendar = Calendar.getInstance().apply {
                     set(Calendar.SECOND, 0)
@@ -42,21 +47,28 @@ class AddItemAlarmFragment : Fragment() {
                     set(Calendar.HOUR_OF_DAY, materialTimePicker.hour)
                 }
 
+                // Форматируем выбранное время как строку
                 val formattedTime = String.format("%02d:%02d", materialTimePicker.hour, materialTimePicker.minute)
+
+                // Отображаем время в кнопке
                 binding.chooseClock.text = formattedTime
 
-                // ⬇️ Отправляем результат во фрагмент-список
+                // Передаём результат в AlarmListFragment через FragmentResult API
                 val result = Bundle().apply {
                     putString("selected_time", formattedTime)
                 }
                 parentFragmentManager.setFragmentResult("alarm_time_key", result)
+
+                // Возвращаемся назад к списку
                 parentFragmentManager.popBackStack()
             }
 
+            // Показываем диалог выбора времени
             materialTimePicker.show(parentFragmentManager, "tag_picker")
         }
     }
 
+    // Очищаем binding при уничтожении view
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
