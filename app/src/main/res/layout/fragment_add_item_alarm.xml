@@ -6,37 +6,82 @@
     android:layout_height="wrap_content"
     tools:context=".alarmList.AddItemAlarmFragment">
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
+        <!-- Время будильника -->
         <TextView
             android:id="@+id/choose_clock"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
             android:gravity="center"
             android:text="07:00"
-            android:textSize="70dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:textSize="70sp"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- Дни недели -->
+        <LinearLayout
+            android:id="@+id/week_days_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@+id/choose_clock"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:gravity="center">
+
+            <TextView android:id="@+id/textMon" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:gravity="center" android:text="Пн" android:textSize="20sp"/>
+            <TextView android:id="@+id/textTue" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:gravity="center" android:text="Вт" android:textSize="20sp"/>
+            <TextView android:id="@+id/textWed" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:gravity="center" android:text="Ср" android:textSize="20sp"/>
+            <TextView android:id="@+id/textThu" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:gravity="center" android:text="Чт" android:textSize="20sp"/>
+            <TextView android:id="@+id/textFri" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:gravity="center" android:text="Пт" android:textSize="20sp"/>
+            <TextView android:id="@+id/textSat" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:gravity="center" android:text="Сб" android:textSize="20sp"/>
+            <TextView android:id="@+id/textSun" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:gravity="center" android:text="Вс" android:textSize="20sp"/>
+        </LinearLayout>
+
+        <!-- Выбор мелодии -->
+        <Button
+            android:id="@+id/button_choose_ringtone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Выбрать мелодию"
+            app:layout_constraintTop_toBottomOf="@+id/week_days_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="24dp"/>
+
+        <!-- Уровень сложности -->
+        <Spinner
+            android:id="@+id/spinner_difficulty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/button_choose_ringtone"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="16dp"
+            android:entries="@array/difficulty_levels" />
+
+        <!-- Кнопка сохранить -->
+        <Button
+            android:id="@+id/button_save_alarm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Сохранить будильник"
+            android:layout_marginTop="32dp"
+            app:layout_constraintTop_toBottomOf="@+id/spinner_difficulty"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
-
-
-
-<!--<FrameLayout
-            android:id="@+id/choose_clock"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-
-        </FrameLayout>
--->

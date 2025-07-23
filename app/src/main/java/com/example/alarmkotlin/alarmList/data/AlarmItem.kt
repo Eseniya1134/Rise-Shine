@@ -1,6 +1,4 @@
 package com.example.alarmkotlin.alarmList.data
-
-
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -9,9 +7,13 @@ data class AlarmItem(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 
-    val time: String,         // например, "07:30"
+    val time: String,                     // например, "07:30"
+    val daysOfWeek: String,              // например, "Mon,Tue,Wed" или JSON: "[1,2,3]"
+    val ringtoneUri: String?,            // путь к выбранной мелодии
+    val difficultyLevel: Int = 1,        // 1 — лёгкий, 2 — средний, 3 — сложный
     val isEnabled: Boolean = true
 )
+
 
 
 

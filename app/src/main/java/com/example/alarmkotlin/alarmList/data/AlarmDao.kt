@@ -5,18 +5,20 @@ import androidx.room.*
 @Dao
 interface AlarmDao {
 
-    @Insert
-    suspend fun insert(alarm: AlarmItem) //Вставить объект в базу
-
     @Query("SELECT * FROM alarms")
-    suspend fun getAll(): List<AlarmItem> //	Выполнить SQL-запрос вручную
+    suspend fun getAllAlarms(): List<AlarmItem>
 
-    @Delete
-    suspend fun delete(alarm: AlarmItem) //Удалить объект
+    @Query("SELECT * FROM alarms WHERE id = :id")
+    suspend fun getAlarmById(id: Int): AlarmItem?
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAlarm(alarm: AlarmItem): Long
 
     @Update
-    suspend fun update(alarm: AlarmItem) // Обновить объект
+    suspend fun updateAlarm(alarm: AlarmItem)
+
+    @Delete
+    suspend fun deleteAlarm(alarm: AlarmItem)
 }
 
 /**

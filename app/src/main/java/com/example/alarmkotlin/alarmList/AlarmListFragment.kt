@@ -42,7 +42,7 @@ class AlarmListFragment : Fragment() {
         // Создаём адаптер и передаём в него callback при переключении будильника
         adapter = AlarmAdapter(emptyList()) { updatedAlarm ->
             lifecycleScope.launch {
-                db.alarmDao().update(updatedAlarm)
+                db.alarmDao().updateAlarm(updatedAlarm)
                 loadAlarms() // обновляем список
             }
         }
@@ -54,11 +54,23 @@ class AlarmListFragment : Fragment() {
         // Слушаем результат от AddItemAlarmFragment
         parentFragmentManager.setFragmentResultListener("alarm_time_key", viewLifecycleOwner) { _, bundle ->
             val time = bundle.getString("selected_time") ?: return@setFragmentResultListener
-            val newAlarm = AlarmItem(time = time)
+
+            // Получаем дополнительные параметры из AddItemAlarmFragment
+            val daysOfWeek = bundle.getString("selected_days") ?: "Mon,Tue" // Дни недели по умолчанию
+            val ringtone = bundle.getString("selected_ringtone") // Путь к мелодии (может быть null)
+            val difficulty = bundle.getInt("selected_difficulty", 1) // Уровень сложности (по умолчанию — 1)
+
+            // Создаём новый объект будильника с учётом всех полей
+            val newAlarm = AlarmItem(
+                time = time,
+                daysOfWeek = daysOfWeek,
+                ringtoneUri = ringtone,
+                difficultyLevel = difficulty
+            )
 
             // Сохраняем в базу данных
             lifecycleScope.launch {
-                db.alarmDao().insert(newAlarm)
+                db.alarmDao().insertAlarm(newAlarm)
                 loadAlarms()
             }
         }
@@ -78,7 +90,7 @@ class AlarmListFragment : Fragment() {
     private fun loadAlarms() {
         lifecycleScope.launch {
             val alarms = withContext(Dispatchers.IO) {
-                db.alarmDao().getAll()
+                db.alarmDao().getAllAlarms()
             }
             adapter.updateList(alarms)
         }
