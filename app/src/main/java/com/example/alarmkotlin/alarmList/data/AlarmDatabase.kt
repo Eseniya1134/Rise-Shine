@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-// Обновили версию с 1 на 2
+
 @Database(entities = [AlarmItem::class], version = 2, exportSchema = false)
 abstract class AlarmDatabase : RoomDatabase() {
 
@@ -22,7 +22,7 @@ abstract class AlarmDatabase : RoomDatabase() {
                     AlarmDatabase::class.java,
                     "alarm_database"
                 )
-                    .fallbackToDestructiveMigration() // ✅ Пересоздаёт БД при изменении схемы
+                    .fallbackToDestructiveMigration() // Пересоздаёт БД при изменении схемы
                     .build()
                 INSTANCE = instance
                 instance

@@ -27,6 +27,7 @@ class AlarmAdapter(
     override fun onBindViewHolder(holder: AlarmViewHolder, position: Int) {
         val alarm = alarms[position]
         holder.textTime.text = alarm.time
+        holder.switchEnabled.setOnCheckedChangeListener(null)
         holder.switchEnabled.isChecked = alarm.isEnabled
 
         holder.switchEnabled.setOnCheckedChangeListener { _, isChecked ->
