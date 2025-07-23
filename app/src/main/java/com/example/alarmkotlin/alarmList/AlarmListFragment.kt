@@ -1,5 +1,9 @@
 package com.example.alarmkotlin.alarmList
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +11,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.alarmkotlin.AlarmActivity
 import com.example.alarmkotlin.R
 import com.example.alarmkotlin.alarmList.data.AlarmDatabase
 import com.example.alarmkotlin.alarmList.data.AlarmItem
@@ -14,6 +19,7 @@ import com.example.alarmkotlin.databinding.FragmentAlarmListBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 class AlarmListFragment : Fragment() {
 
@@ -95,6 +101,9 @@ class AlarmListFragment : Fragment() {
             adapter.updateList(alarms)
         }
     }
+
+
+
 
     // Очищаем binding, чтобы избежать утечек памяти
     override fun onDestroyView() {
