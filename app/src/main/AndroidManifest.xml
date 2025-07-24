@@ -24,11 +24,18 @@
             android:name=".alarmList.AlarmReceiver"
             android:exported="true"/>
 
-        <activity android:name=".AlarmActivity"
+        <service
+            android:name=".alarmList.AlarmForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <activity
+            android:name=".AlarmActivity"
+            android:launchMode="singleTop"
             android:exported="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
-            android:theme="@style/Theme.AlarmKotlin"/>
+            android:excludeFromRecents="true"/>
 
 
 

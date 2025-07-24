@@ -2,6 +2,7 @@ package com.example.alarmkotlin.alarmList
 
 import android.app.Activity
 import android.app.AlarmManager
+import android.app.AlertDialog
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -92,6 +93,7 @@ class AddItemAlarmFragment : Fragment() {
             startActivityForResult(intent, RINGTONE_REQUEST_CODE)
         }
 
+
         binding.buttonSaveAlarm.setOnClickListener {
             val selectedTime = binding.chooseClock.text.toString()
             if (!selectedTime.contains(":")) {
@@ -104,11 +106,10 @@ class AddItemAlarmFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // Проверка разрешения для точных будильников (Android 12+)
+            // Проверка разрешения на точные будильники (Android 12+)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 if (!alarmManager.canScheduleExactAlarms()) {
-                    // Запросить у пользователя разрешение
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                         data = Uri.parse("package:" + requireContext().packageName)
                     }
@@ -118,6 +119,31 @@ class AddItemAlarmFragment : Fragment() {
                 }
             }
 
+            // Проверка оптимизации батареи
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val powerManager = requireContext().getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+                val packageName = requireContext().packageName
+
+                if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Отключение оптимизации батареи")
+                        .setMessage("Чтобы будильник сработал точно, даже в фоновом режиме, необходимо отключить оптимизацию батареи.")
+                        .setPositiveButton("Открыть настройки") { _, _ ->
+                            try {
+                                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(requireContext(), "Не удалось открыть настройки", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .setNegativeButton("Отмена", null)
+                        .show()
+
+                    return@setOnClickListener // Не сохраняем будильник, пока не отключили оптимизацию
+                }
+            }
+
+            // Установка будильника
             val hour = picker.hour
             val minute = picker.minute
             scheduleAlarm(requireContext(), hour, minute)
@@ -130,10 +156,10 @@ class AddItemAlarmFragment : Fragment() {
                 putString("selected_ringtone", selectedRingtoneUri ?: "")
                 putInt("selected_difficulty", difficultyLevel)
             }
+
             parentFragmentManager.setFragmentResult("alarm_time_key", result)
             parentFragmentManager.popBackStack()
         }
-
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -149,13 +175,16 @@ class AddItemAlarmFragment : Fragment() {
     private fun scheduleAlarm(context: Context, hour: Int, minute: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
+        val requestCode = System.currentTimeMillis().toInt() // Уникальный ID
+
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("selected_ringtone", selectedRingtoneUri)
+            action = "ALARM_ACTION_$requestCode"
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            1,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -178,6 +207,7 @@ class AddItemAlarmFragment : Fragment() {
             pendingIntent
         )
     }
+
 
 
 
