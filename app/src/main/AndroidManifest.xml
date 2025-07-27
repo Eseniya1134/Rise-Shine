@@ -3,20 +3,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.alarmkotlin">
 
-    <!-- Разрешения всегда объявляются здесь -->
-
+    <!-- Основные разрешения для будильника -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
+    <!-- КРИТИЧЕСКИ ВАЖНЫЕ разрешения для работы при выключенном экране -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Для Android 12+ (API 31+) -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
+    <!-- Разрешение на игнорирование оптимизации батареи -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <application
         android:allowBackup="true"
         android:enableOnBackInvokedCallback="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -24,32 +34,49 @@
         android:theme="@style/Theme.AlarmKotlin"
         tools:targetApi="31">
 
+        <!-- AlarmReceiver - ОБЯЗАТЕЛЬНО с правильными флагами -->
         <receiver
             android:name=".alarmList.AlarmReceiver"
-            android:exported="true"/>
+            android:enabled="true"
+            android:exported="true"
+            android:directBootAware="true">
 
+            <!-- Для перезапуска будильников после перезагрузки -->
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
 
-
+        <!-- AlarmActivity с полноэкранными интентами -->
         <activity
             android:name=".AlarmActivity"
             android:launchMode="singleTop"
             android:exported="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
-            android:excludeFromRecents="true"/>
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AlarmKotlin.FullScreen" />
 
-
-
+        <!-- MainActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
+
+        <!-- Foreground Service для надежной работы -->
+        <service
+            android:name=".alarmList.AlarmService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
     </application>
 </manifest>

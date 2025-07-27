@@ -6,4 +6,16 @@
     </style>
 
     <style name="Theme.AlarmKotlin" parent="Base.Theme.AlarmKotlin" />
+
+
+    <!-- Полноэкранная тема для AlarmActivity -->
+    <style name="Theme.AlarmKotlin.FullScreen" parent="Theme.AlarmKotlin">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:navigationBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
+    </style>
 </resources>
