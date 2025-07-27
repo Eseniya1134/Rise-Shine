@@ -1,4 +1,5 @@
 package com.example.alarmkotlin.alarmList
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,45 +9,62 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.alarmkotlin.R
 import com.example.alarmkotlin.alarmList.data.AlarmItem
 
+/**
+ * Адаптер для отображения списка будильников в RecyclerView.
+ * @param alarms - список объектов AlarmItem, каждый из которых содержит данные одного будильника.
+ * @param onToggle - функция обратного вызова, вызывается при включении/выключении будильника пользователем.
+ */
 class AlarmAdapter(
     private var alarms: List<AlarmItem>,
     private val onToggle: (AlarmItem) -> Unit
 ) : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
 
+    /**
+     * ViewHolder для одного элемента списка будильников.
+     * Содержит ссылки на TextView с временем и Switch для включения/выключения будильника.
+     */
     inner class AlarmViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textTime: TextView = itemView.findViewById(R.id.textTime)
-        val switchEnabled: Switch = itemView.findViewById(R.id.switchEnabled)
+        val textTime: TextView = itemView.findViewById(R.id.textTime) // отображает время будильника
+        val switchEnabled: Switch = itemView.findViewById(R.id.switchEnabled) // переключатель включён/выключен
     }
 
+    /**
+     * Создаёт новый ViewHolder. Вызывается, когда RecyclerView нужно создать новый элемент.
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlarmViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_alarm, parent, false)
+            .inflate(R.layout.item_alarm, parent, false) // загружаем layout для одного будильника
         return AlarmViewHolder(view)
     }
 
+    /**
+     * Привязывает данные из списка alarms к конкретному ViewHolder'у.
+     */
     override fun onBindViewHolder(holder: AlarmViewHolder, position: Int) {
         val alarm = alarms[position]
-        holder.textTime.text = alarm.time
-        holder.switchEnabled.setOnCheckedChangeListener(null)
-        holder.switchEnabled.isChecked = alarm.isEnabled
+        holder.textTime.text = alarm.time // отображаем время будильника
+        holder.switchEnabled.setOnCheckedChangeListener(null) // убираем старый слушатель
 
+        holder.switchEnabled.isChecked = alarm.isEnabled // устанавливаем текущее состояние переключателя
+
+        // Назначаем новый слушатель на переключатель
         holder.switchEnabled.setOnCheckedChangeListener { _, isChecked ->
+            // Вызываем onToggle с обновлённым будильником (копия с изменённым флагом isEnabled)
             onToggle(alarm.copy(isEnabled = isChecked))
         }
     }
 
+    /**
+     * Возвращает общее количество будильников в списке.
+     */
     override fun getItemCount(): Int = alarms.size
 
+    /**
+     * Обновляет список будильников и перерисовывает адаптер.
+     * Используется, если в список добавили, удалили или изменили элементы.
+     */
     fun updateList(newList: List<AlarmItem>) {
         alarms = newList
-        notifyDataSetChanged()
+        notifyDataSetChanged() // сообщаем адаптеру, что данные обновились
     }
 }
-
-/*
-Объяснение:
-- Адаптер связывает список будильников с RecyclerView.
-- AlarmViewHolder содержит ссылки на элементы item_alarm.xml.
-- onToggle вызывается при переключении Switch — для обновления состояния в БД.
-- updateList позволяет обновить список будильников в адаптере и перерисовать UI.
-*/

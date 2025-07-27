@@ -26,16 +26,20 @@ class AddItemAlarmFragment : Fragment() {
     private var _binding: FragmentAddItemAlarmBinding? = null
     private val binding get() = _binding!!
 
+    // Хранение выбранных дней недели (Mon, Tue и т.д.)
     private val selectedDays = mutableSetOf<String>()
+
+    // Хранение URI выбранной мелодии
     private var selectedRingtoneUri: String? = null
 
-    // Сделаем picker полем класса, чтобы доступ был из любого места
+    // Таймпикер для выбора времени
     private lateinit var picker: MaterialTimePicker
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Привязка layout через ViewBinding
         _binding = FragmentAddItemAlarmBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -43,26 +47,26 @@ class AddItemAlarmFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Инициализация picker один раз, но лучше создавать при нажатии (как раньше)
-        // Но чтобы использовать picker.hour и picker.minute в save, лучше создать при клике и сохранить в поле
-
+        // Обработчик нажатия на кнопку выбора времени
         binding.chooseClock.setOnClickListener {
+            // Создание диалога выбора времени
             picker = MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H)
+                .setTimeFormat(TimeFormat.CLOCK_24H) // 24-часовой формат
                 .setHour(12)
                 .setMinute(0)
                 .setTitleText("Выберите время для будильника")
                 .build()
 
+            // Обработка выбора времени
             picker.addOnPositiveButtonClickListener {
                 val formattedTime = String.format("%02d:%02d", picker.hour, picker.minute)
-                binding.chooseClock.text = formattedTime
+                binding.chooseClock.text = formattedTime // Отображаем выбранное время на кнопке
             }
 
             picker.show(parentFragmentManager, "tag_picker")
         }
 
-        // Обработка кликов по дням недели
+        // Обработка выбора дней недели (подсвечивание и сохранение)
         val dayViews = listOf(
             binding.textMon to "Mon",
             binding.textTue to "Tue",
@@ -77,14 +81,15 @@ class AddItemAlarmFragment : Fragment() {
             textView.setOnClickListener {
                 if (selectedDays.contains(dayCode)) {
                     selectedDays.remove(dayCode)
-                    textView.alpha = 0.5f
+                    textView.alpha = 0.5f // Неактивный день
                 } else {
                     selectedDays.add(dayCode)
-                    textView.alpha = 1.0f
+                    textView.alpha = 1.0f // Активный день
                 }
             }
         }
 
+        // Обработчик кнопки выбора мелодии
         binding.buttonChooseRingtone.setOnClickListener {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -93,7 +98,7 @@ class AddItemAlarmFragment : Fragment() {
             startActivityForResult(intent, RINGTONE_REQUEST_CODE)
         }
 
-
+        // Обработчик кнопки "Сохранить будильник"
         binding.buttonSaveAlarm.setOnClickListener {
             val selectedTime = binding.chooseClock.text.toString()
             if (!selectedTime.contains(":")) {
@@ -119,7 +124,7 @@ class AddItemAlarmFragment : Fragment() {
                 }
             }
 
-            // Проверка оптимизации батареи
+            // Проверка оптимизации батареи (Android 6+)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val powerManager = requireContext().getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
                 val packageName = requireContext().packageName
@@ -139,17 +144,19 @@ class AddItemAlarmFragment : Fragment() {
                         .setNegativeButton("Отмена", null)
                         .show()
 
-                    return@setOnClickListener // Не сохраняем будильник, пока не отключили оптимизацию
+                    return@setOnClickListener // Не продолжаем, пока не отключена оптимизация
                 }
             }
 
-            // Установка будильника
+            // Установка самого будильника
             val hour = picker.hour
             val minute = picker.minute
             scheduleAlarm(requireContext(), hour, minute)
 
+            // Получаем уровень сложности из спиннера
             val difficultyLevel = binding.spinnerDifficulty.selectedItemPosition + 1
 
+            // Собираем все данные и передаём их обратно через FragmentResult
             val result = Bundle().apply {
                 putString("selected_time", selectedTime)
                 putString("selected_days", selectedDays.joinToString(","))
@@ -158,10 +165,11 @@ class AddItemAlarmFragment : Fragment() {
             }
 
             parentFragmentManager.setFragmentResult("alarm_time_key", result)
-            parentFragmentManager.popBackStack()
+            parentFragmentManager.popBackStack() // Возврат назад
         }
     }
 
+    // Обработка результата выбора мелодии
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RINGTONE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
@@ -172,13 +180,14 @@ class AddItemAlarmFragment : Fragment() {
         }
     }
 
+    // Метод установки будильника в AlarmManager
     private fun scheduleAlarm(context: Context, hour: Int, minute: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        val requestCode = System.currentTimeMillis().toInt() // Уникальный ID
+        val requestCode = System.currentTimeMillis().toInt() // Уникальный ID будильника
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
-            putExtra("selected_ringtone", selectedRingtoneUri)
+            putExtra("selected_ringtone", selectedRingtoneUri) // Передаём выбранный рингтон
             action = "ALARM_ACTION_$requestCode"
         }
 
@@ -189,18 +198,20 @@ class AddItemAlarmFragment : Fragment() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Устанавливаем время срабатывания будильника
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (before(Calendar.getInstance())) {
-                add(Calendar.DAY_OF_MONTH, 1)
+                add(Calendar.DAY_OF_MONTH, 1) // Если время уже прошло — на следующий день
             }
         }
 
         Log.d("AlarmDebug", "Будильник запланирован на: ${calendar.time}")
 
+        // Установка точного срабатывания, даже в режиме сна
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
@@ -208,16 +219,13 @@ class AddItemAlarmFragment : Fragment() {
         )
     }
 
-
-
-
+    // Освобождаем ресурсы ViewBinding
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
     companion object {
-        private const val RINGTONE_REQUEST_CODE = 101
+        private const val RINGTONE_REQUEST_CODE = 101 // Код для обработки результата выбора рингтона
     }
-
 }
