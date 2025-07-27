@@ -14,7 +14,8 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 
 /**
- * AlarmActivity — обновленная версия для работы при выключенном экране
+ * AlarmActivity - экран будильника, отображается поверх блокировки
+ * Включает экран, воспроизводит звук и позволяет отключить будильник
  */
 class AlarmActivity : AppCompatActivity() {
 
@@ -36,26 +37,31 @@ class AlarmActivity : AppCompatActivity() {
         setupDismissButton()
     }
 
+    /**
+     * setupWindowFlags() - настройка окна для работы при заблокированном экране
+     * Включает экран и показывает активность поверх блокировки
+     */
     private fun setupWindowFlags() {
+        // Для Android 8.1+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
+            setShowWhenLocked(true) // Показать при заблокированном экране
+            setTurnScreenOn(true)   // Включить экран
 
-            // Разблокируем экран программно
+            // Программно разблокируем экран
             val keyguardManager = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
             keyguardManager.requestDismissKeyguard(this, null)
         }
 
-        // Флаги окна для старых версий Android
+        // Флаги для старых версий Android
         window.addFlags(
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or     // Показать на блокировке
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or       // Включить экран
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or       // Не выключать экран
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or     // Убрать блокировку
                     WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
 
-        // Для полноэкранного режима
+        // Полноэкранный режим
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
         } else {
@@ -68,11 +74,17 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * startAlarmSound() - запуск звука будильника
+     * Использует выбранный рингтон или системный звук по умолчанию
+     */
     private fun startAlarmSound() {
+        // Получаем URI рингтона из Intent
         val uriStr = intent.getStringExtra("selected_ringtone")
         val alarmUri = if (!uriStr.isNullOrEmpty()) {
             Uri.parse(uriStr)
         } else {
+            // Если рингтон не выбран, используем системные звуки по порядку
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
@@ -81,10 +93,10 @@ class AlarmActivity : AppCompatActivity() {
         try {
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(this@AlarmActivity, alarmUri)
-                setAudioStreamType(AudioManager.STREAM_ALARM)
-                isLooping = true
+                setAudioStreamType(AudioManager.STREAM_ALARM) // Поток будильника
+                isLooping = true // Зацикливаем воспроизведение
 
-                // Устанавливаем максимальную громкость
+                // Устанавливаем максимальную громкость для будильника
                 val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
                 val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
                 audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
@@ -97,7 +109,7 @@ class AlarmActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e("AlarmDebug", "Ошибка воспроизведения звука: ${e.message}")
 
-            // Попытка воспроизвести системный звук как резерв
+            // Резервный вариант - системный Ringtone
             try {
                 val ringtone = RingtoneManager.getRingtone(this, alarmUri)
                 ringtone?.play()
@@ -107,27 +119,30 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * setupDismissButton() - настройка способов отключения будильника
+     */
     private fun setupDismissButton() {
-        // Добавляем возможность закрыть будильник нажатием на экран
+        // Отключение нажатием на экран
         findViewById<View>(android.R.id.content)?.setOnClickListener {
             dismissAlarm()
         }
 
-        // Автоматическое закрытие через 10 минут
+        // Автоматическое отключение через 10 минут
         android.os.Handler(mainLooper).postDelayed({
             if (!isFinishing) {
                 dismissAlarm()
             }
-        }, 10 * 60 * 1000) // 10 минут
+        }, 10 * 60 * 1000)
     }
 
-    private fun dismissAlarm() {
+    private fun dismissAlarm() { //отключение будильника
         Log.d("AlarmDebug", "Закрываем будильник")
         stopAlarmSound()
         finish()
     }
 
-    private fun stopAlarmSound() {
+    private fun stopAlarmSound() {  //остановка воспроизведения звука
         mediaPlayer?.let {
             try {
                 if (it.isPlaying) {
@@ -142,7 +157,7 @@ class AlarmActivity : AppCompatActivity() {
         mediaPlayer = null
     }
 
-    override fun onNewIntent(intent: Intent) {
+    override fun onNewIntent(intent: Intent) {  //обновление звука при повторном запуске активности
         super.onNewIntent(intent)
         // Если активность уже запущена, просто обновляем звук
         if (mediaPlayer?.isPlaying != true) {
