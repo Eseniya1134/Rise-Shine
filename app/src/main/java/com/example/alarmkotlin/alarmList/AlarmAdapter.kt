@@ -5,9 +5,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Switch
 import android.widget.TextView
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alarmkotlin.R
 import com.example.alarmkotlin.alarmList.data.AlarmItem
+import com.example.alarmkotlin.timer.TimerFragment
 
 /**
  * Адаптер для отображения списка будильников в RecyclerView.
@@ -15,9 +17,13 @@ import com.example.alarmkotlin.alarmList.data.AlarmItem
  * @param onToggle - функция обратного вызова, вызывается при включении/выключении будильника пользователем.
  */
 class AlarmAdapter(
+    private val fragmentManager: FragmentManager,
     private var alarms: List<AlarmItem>,
-    private val onToggle: (AlarmItem) -> Unit
+    private val onToggle: (AlarmItem) -> Unit,
+
 ) : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
+
+
 
     /**
      * ViewHolder для одного элемента списка будильников.
@@ -51,6 +57,15 @@ class AlarmAdapter(
         holder.switchEnabled.setOnCheckedChangeListener { _, isChecked ->
             // Вызываем onToggle с обновлённым будильником (копия с изменённым флагом isEnabled)
             onToggle(alarm.copy(isEnabled = isChecked))
+        }
+
+
+        //переход для редактирования будильника
+        holder.itemView.setOnClickListener{
+            fragmentManager.beginTransaction()
+                .replace(R.id.frameAlarm, AddItemAlarmFragment()) // заменяем текущий фрагмент
+                .addToBackStack(null) // можно вернуться назад
+                .commit()
         }
     }
 

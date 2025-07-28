@@ -46,12 +46,13 @@ class AlarmListFragment : Fragment() {
         db = AlarmDatabase.getDatabase(requireContext())
 
         // Создаём адаптер и передаём в него callback при переключении будильника
-        adapter = AlarmAdapter(emptyList()) { updatedAlarm ->
+        adapter = AlarmAdapter(parentFragmentManager, emptyList()) { updatedAlarm ->
             lifecycleScope.launch {
                 db.alarmDao().updateAlarm(updatedAlarm)
-                loadAlarms() // обновляем список
+                loadAlarms()
             }
         }
+
 
         // Настраиваем RecyclerView
         binding.recyclerViewAlarms.layoutManager = LinearLayoutManager(requireContext())
