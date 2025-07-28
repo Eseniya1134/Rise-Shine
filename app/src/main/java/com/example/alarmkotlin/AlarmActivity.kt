@@ -11,14 +11,17 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.example.alarmkotlin.databinding.ActivityAlarmBinding
+import com.example.alarmkotlin.databinding.ActivityMainBinding
 
 /**
  * AlarmActivity - экран будильника, отображается поверх блокировки
  * Включает экран, воспроизводит звук и позволяет отключить будильник
  */
 class AlarmActivity : AppCompatActivity() {
-
+    private lateinit var binding: ActivityAlarmBinding
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,7 +31,8 @@ class AlarmActivity : AppCompatActivity() {
         // Настройки для показа поверх экрана блокировки
         setupWindowFlags()
 
-        setContentView(R.layout.activity_alarm)
+        binding = ActivityAlarmBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Запускаем звук
         startAlarmSound()
@@ -123,8 +127,9 @@ class AlarmActivity : AppCompatActivity() {
      * setupDismissButton() - настройка способов отключения будильника
      */
     private fun setupDismissButton() {
-        // Отключение нажатием на экран
-        findViewById<View>(android.R.id.content)?.setOnClickListener {
+
+        //отключение по кнопке стоп
+        binding.stopBtn.setOnClickListener{btn ->
             dismissAlarm()
         }
 
@@ -174,6 +179,6 @@ class AlarmActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         super.onBackPressed()
-        dismissAlarm()
+       // dismissAlarm()
     }
 }
