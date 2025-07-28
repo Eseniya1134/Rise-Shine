@@ -14,11 +14,14 @@ import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.alarmkotlin.AlarmActivity
 import com.example.alarmkotlin.MainActivity
+import com.example.alarmkotlin.alarmList.data.AlarmDatabase
 import com.example.alarmkotlin.databinding.FragmentAddItemAlarmBinding
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class AddItemAlarmFragment : Fragment() {
@@ -29,6 +32,7 @@ class AddItemAlarmFragment : Fragment() {
     // Хранение выбранных дней недели (Mon, Tue и т.д.)
     private val selectedDays = mutableSetOf<String>()
 
+    private lateinit var db: AlarmDatabase // База данных
     // Хранение URI выбранной мелодии
     private var selectedRingtoneUri: String? = null
 
@@ -47,6 +51,50 @@ class AddItemAlarmFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val alarmId = arguments?.getInt("alarm_id")
+
+        //Загрузка уже имеющейся информации при редактировании
+        lifecycleScope.launch {
+            db = AlarmDatabase.getDatabase(requireContext())
+            val alarm = alarmId?.let { db.alarmDao().getAlarmById(it) }
+
+            alarm?.let {
+                binding.chooseClock.text = it.time
+
+                val parts = it.time.split(":")
+                val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
+                val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+                picker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(hour)
+                    .setMinute(minute)
+                    .setTitleText("Выберите время для будильника")
+                    .build()
+
+                selectedRingtoneUri = it.ringtoneUri
+
+                val savedDays = it.daysOfWeek.split(",")
+                selectedDays.addAll(savedDays)
+
+                val dayViews = listOf(
+                    binding.textMon to "Mon",
+                    binding.textTue to "Tue",
+                    binding.textWed to "Wed",
+                    binding.textThu to "Thu",
+                    binding.textFri to "Fri",
+                    binding.textSat to "Sat",
+                    binding.textSun to "Sun"
+                )
+                for ((view, code) in dayViews) {
+                    view.alpha = if (code in selectedDays) 1.0f else 0.5f
+                }
+
+                binding.spinnerDifficulty.setSelection(it.difficultyLevel - 1)
+            }
+        }
+
+
         // Обработчик нажатия на кнопку выбора времени
         binding.chooseClock.setOnClickListener {
             // Создание диалога выбора времени
@@ -64,6 +112,7 @@ class AddItemAlarmFragment : Fragment() {
             }
 
             picker.show(parentFragmentManager, "tag_picker")
+
         }
 
         // Обработка выбора дней недели (подсвечивание и сохранение)
@@ -149,8 +198,10 @@ class AddItemAlarmFragment : Fragment() {
             }
 
             // Установка самого будильника
-            val hour = picker.hour
-            val minute = picker.minute
+            val timeText = binding.chooseClock.text.toString()
+            val parts = timeText.split(":")
+            val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
+            val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
             scheduleAlarm(requireContext(), hour, minute)
 
             // Получаем уровень сложности из спиннера

@@ -1,5 +1,6 @@
 package com.example.alarmkotlin.alarmList
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,9 +63,15 @@ class AlarmAdapter(
 
         //переход для редактирования будильника
         holder.itemView.setOnClickListener{
+            val fragment = AddItemAlarmFragment().apply {
+                arguments = Bundle().apply {
+                    putInt("alarm_id", alarm.id) // передаём ID
+                }
+            }
+
             fragmentManager.beginTransaction()
-                .replace(R.id.frameAlarm, AddItemAlarmFragment()) // заменяем текущий фрагмент
-                .addToBackStack(null) // можно вернуться назад
+                .replace(R.id.frameAlarm, fragment)
+                .addToBackStack(null)
                 .commit()
         }
     }
