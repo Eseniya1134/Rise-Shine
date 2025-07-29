@@ -149,15 +149,13 @@ class AddItemAlarmFragment : Fragment() {
 
         // Обработчик кнопки "Сохранить будильник"
         binding.buttonSaveAlarm.setOnClickListener {
-            val selectedTime = binding.chooseClock.text.toString()
-            if (!selectedTime.contains(":")) {
-                Toast.makeText(requireContext(), "Пожалуйста, выберите время", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            var selectedTime = binding.chooseClock.text.toString()
 
-            if (!::picker.isInitialized) {
-                Toast.makeText(requireContext(), "Пожалуйста, выберите время", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            if (!selectedTime.contains(":") || !::picker.isInitialized) {
+                selectedTime = "07:00"
+                binding.chooseClock.text = selectedTime
+                //Toast.makeText(requireContext(), "Пожалуйста, выберите время", Toast.LENGTH_SHORT).show()
+                //return@setOnClickListener
             }
 
             // Проверка разрешения на точные будильники (Android 12+)

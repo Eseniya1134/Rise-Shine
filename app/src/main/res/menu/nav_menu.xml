@@ -2,13 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/alarmList"
-        android:title="Будильник"
+        android:id="@+id/stopwatch"
+        android:title="Секундомер"
         android:icon="@drawable/ic_android_black_24dp" />
 
     <item
-        android:id="@+id/stopwatch"
-        android:title="Секундомер"
+        android:id="@+id/alarmList"
+        android:title="Будильник"
         android:icon="@drawable/ic_android_black_24dp" />
 
     <item
