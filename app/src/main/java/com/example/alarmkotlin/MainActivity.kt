@@ -34,12 +34,6 @@ class MainActivity : AppCompatActivity() {
         // Устанавливаем второй пункт меню как выбранный
         binding.navBottom.selectedItemId = R.id.alarmList
 
-        // Этот код теперь не нужен, так как выбор меню сам загрузит фрагмент
-        // if (savedInstanceState == null) {
-        //     supportFragmentManager.beginTransaction()
-        //         .replace(R.id.frameAlarm, AlarmListFragment())
-        //         .commit()
-        // }
     }
 
 
