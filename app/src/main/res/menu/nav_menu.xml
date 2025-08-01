@@ -4,15 +4,15 @@
     <item
         android:id="@+id/stopwatch"
         android:title="Секундомер"
-        android:icon="@drawable/ic_android_black_24dp" />
+        android:icon="@drawable/free_icon_font_clock_desk_11749018" />
 
     <item
         android:id="@+id/alarmList"
         android:title="Будильник"
-        android:icon="@drawable/ic_android_black_24dp" />
+        android:icon="@drawable/free_icon_font_alarm_plus_17762132" />
 
     <item
         android:id="@+id/timer"
         android:title="Таймер"
-        android:icon="@drawable/ic_android_black_24dp" />
+        android:icon="@drawable/free_icon_font_hourglass_start_9586310" />
 </menu>

@@ -27,7 +27,6 @@
         android:layout_marginBottom="24dp"
         android:background="@drawable/navigation_bg"
         android:elevation="20dp"
-        app:itemBackground=""
         app:itemIconTint="@color/nav_icon_selector"
         app:labelVisibilityMode="unlabeled"
         app:itemRippleColor="@android:color/transparent"
