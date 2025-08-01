@@ -1,0 +1,124 @@
+<!-- Иконка секундомера -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorOnSurface">
+
+    <!-- Основной корпус секундомера -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:pathData="M12,6c4.41,0 8,3.59 8,8s-3.59,8 -8,8s-8,-3.59 -8,-8s3.59,-8 8,-8z"/>
+
+    <!-- Кнопка пуск/стоп сверху -->
+    <circle
+        android:fillColor="@android:color/black"
+        android:cx="12"
+        android:cy="3"
+        android:radius="1.5"/>
+
+    <!-- Кнопка сброса справа -->
+    <circle
+        android:fillColor="@android:color/black"
+        android:cx="18"
+        android:cy="9"
+        android:radius="1"/>
+
+    <!-- Главная стрелка секундомера -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,9v5l3,2"/>
+
+    <!-- Малая стрелка (минуты) -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M12,11v2"/>
+
+    <!-- Деления на циферблате -->
+    <!-- 12 часов -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:pathData="M12,7v1"/>
+
+    <!-- 3 часа -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:pathData="M19,14h-1"/>
+
+    <!-- 6 часов -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:pathData="M12,21v-1"/>
+
+    <!-- 9 часов -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1.5"
+        android:pathData="M5,14h1"/>
+
+    <!-- Дополнительные мелкие деления -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1"
+        android:pathData="M15.36,8.64l-0.5,0.5"/>
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1"
+        android:pathData="M16.36,17.36l-0.5,-0.5"/>
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1"
+        android:pathData="M8.64,17.36l0.5,-0.5"/>
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1"
+        android:pathData="M7.64,8.64l0.5,0.5"/>
+
+    <!-- Центральная точка -->
+    <circle
+        android:fillColor="@android:color/black"
+        android:cx="12"
+        android:cy="14"
+        android:radius="0.8"/>
+
+    <!-- Маленький циферблат для секунд -->
+    <circle
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1"
+        android:cx="15"
+        android:cy="11"
+        android:radius="1.5"/>
+
+    <!-- Стрелка маленького циферблата -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@android:color/black"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:pathData="M15,10.2v1"/>
+
+</vector>
