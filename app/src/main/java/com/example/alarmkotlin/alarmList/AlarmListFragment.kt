@@ -5,7 +5,10 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.ActionMode
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
@@ -31,6 +34,8 @@ class AlarmListFragment : Fragment() {
     private lateinit var adapter: AlarmAdapter
     private lateinit var db: AlarmDatabase // База данных
 
+    private var actionMode: ActionMode? = null // панель сверху
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -45,16 +50,45 @@ class AlarmListFragment : Fragment() {
         // Получаем доступ к базе данных
         db = AlarmDatabase.getDatabase(requireContext())
 
-        // Создаём адаптер и передаём в него callback при переключении будильника
-        adapter = AlarmAdapter(parentFragmentManager, emptyList()) { updatedAlarm ->
-            lifecycleScope.launch {
-                db.alarmDao().updateAlarm(updatedAlarm)
-                loadAlarms()
+        adapter = AlarmAdapter(
+            fragmentManager = parentFragmentManager,
+            alarms = listOf(), // или твой список
+            onItemLongClick = { alarm ->
+                if (actionMode == null) {
+                    actionMode = requireActivity().startActionMode(actionModeCallback)
+                }
+                adapter.toggleSelection(alarm)
+            },
+            onItemClick = { alarm ->
+                if (adapter.isSelectionMode) {
+                    adapter.toggleSelection(alarm)
+                    if (adapter.getSelectedItems().isEmpty()) {
+                        actionMode?.finish()
+                    }
+                } else {
+                    val fragment = AddItemAlarmFragment().apply {
+                        arguments = Bundle().apply {
+                            putInt("alarm_id", alarm.id)
+                        }
+                    }
+
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.frameAlarm, fragment)
+                        .addToBackStack(null)
+                        .commit()
+                }
+            },
+            onToggle = { updatedAlarm ->
+                lifecycleScope.launch {
+                    db.alarmDao().updateAlarm(updatedAlarm)
+                    loadAlarms()
+                }
             }
-        }
+        )
 
 
-        // Настраиваем RecyclerView
+
+    // Настраиваем RecyclerView
         binding.recyclerViewAlarms.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerViewAlarms.adapter = adapter
 
@@ -103,6 +137,44 @@ class AlarmListFragment : Fragment() {
         }
     }
 
+    private val actionModeCallback = object : ActionMode.Callback {
+        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            mode?.menuInflater?.inflate(R.menu.menu_selection, menu)
+            adapter.isSelectionMode = true
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?) = false
+
+        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+            when (item?.itemId) {
+                R.id.action_delete -> {
+                    // Удаление выбранных будильников
+                    val selected = adapter.getSelectedItems()
+                    lifecycleScope.launch {
+                        selected.forEach { alarm ->
+                            db.alarmDao().deleteAlarm(alarm)
+                        }
+                        loadAlarms() // обновить список
+                        mode?.finish() // закрыть ActionMode
+                    }
+                    return true
+                }
+
+                R.id.action_cancel -> {
+                    mode?.finish() // отменить выбор
+                    return true
+                }
+            }
+            return false
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode?) {
+            adapter.clearSelection()
+            adapter.isSelectionMode = false
+            actionMode = null
+        }
+    }
 
 
 

@@ -20,11 +20,14 @@ import com.example.alarmkotlin.timer.TimerFragment
 class AlarmAdapter(
     private val fragmentManager: FragmentManager,
     private var alarms: List<AlarmItem>,
+    private val onItemLongClick: (AlarmItem) -> Unit,
+    private val onItemClick: (AlarmItem) -> Unit,
     private val onToggle: (AlarmItem) -> Unit,
 
 ) : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
 
-
+    private val selectedItems = mutableSetOf<AlarmItem>() // выбранные будильники
+    var isSelectionMode = false                       // включен ли режим выбора
 
     /**
      * ViewHolder для одного элемента списка будильников.
@@ -62,18 +65,34 @@ class AlarmAdapter(
 
 
         //переход для редактирования будильника
-        holder.itemView.setOnClickListener{
-            val fragment = AddItemAlarmFragment().apply {
-                arguments = Bundle().apply {
-                    putInt("alarm_id", alarm.id) // передаём ID
+        holder.itemView.setOnClickListener {
+            if (isSelectionMode) {
+                onItemClick(alarm)
+            } else {
+                // обычное поведение — открыть фрагмент редактирования
+                val fragment = AddItemAlarmFragment().apply {
+                    arguments = Bundle().apply {
+                        putInt("alarm_id", alarm.id)
+                    }
                 }
-            }
 
-            fragmentManager.beginTransaction()
-                .replace(R.id.frameAlarm, fragment)
-                .addToBackStack(null)
-                .commit()
+                fragmentManager.beginTransaction()
+                    .replace(R.id.frameAlarm, fragment)
+                    .addToBackStack(null)
+                    .commit()
+            }
         }
+
+
+        // Подсвечиваем элемент, если он выбран
+        holder.itemView.isSelected = selectedItems.contains(alarm)
+
+        // Долгое нажатие запускает режим выбора
+        holder.itemView.setOnLongClickListener {
+            onItemLongClick(alarm)
+            true
+        }
+
     }
 
     /**
@@ -89,4 +108,28 @@ class AlarmAdapter(
         alarms = newList
         notifyDataSetChanged() // сообщаем адаптеру, что данные обновились
     }
+
+    /**
+     * Функция выбора/отмены выбора будильника.
+     * Если будильник уже выбран — убираем из списка, иначе — добавляем.
+     */
+    fun toggleSelection(alarm: AlarmItem) {
+        if (selectedItems.contains(alarm)) {
+            selectedItems.remove(alarm)
+        } else {
+            selectedItems.add(alarm)
+        }
+        notifyDataSetChanged() // обновить список (чтобы перерисовались подсветки)
+    }
+
+    /**
+     * Очищаем все выделения.
+     */
+    fun clearSelection() {
+        selectedItems.clear()
+        notifyDataSetChanged()
+    }
+
+    fun getSelectedItems(): List<AlarmItem> = selectedItems.toList()
+
 }

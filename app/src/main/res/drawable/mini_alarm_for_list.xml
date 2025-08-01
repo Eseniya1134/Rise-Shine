@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:tools="http://schemas.android.com/tools" xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/cardview_dark_background" android:state_selected="true"/>
     <item>
         <shape>
             <gradient
@@ -17,4 +18,5 @@
                 tools:ignore="StateListReachable" />
         </shape>
     </item>
+
 </selector>
