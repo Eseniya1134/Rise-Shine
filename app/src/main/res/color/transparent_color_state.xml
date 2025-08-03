@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Состояние когда элемент выбран (checked) -->
+    <item android:color="@android:color/transparent" android:state_checked="true" />
+
+    <!-- Состояние когда элемент выделен (selected) -->
+    <item android:color="@android:color/transparent" android:state_selected="true" />
+
+    <!-- Состояние когда элемент нажат (pressed) -->
+    <item android:color="@android:color/transparent" android:state_pressed="true" />
+
+    <!-- Состояние когда элемент в фокусе -->
+    <item android:color="@android:color/transparent" android:state_focused="true" />
+
+    <!-- Состояние когда элемент активирован -->
+    <item android:color="@android:color/transparent" android:state_activated="true" />
+
+    <!-- Обычное состояние (по умолчанию) -->
+    <item android:color="@android:color/transparent" />
+</selector>

@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/action_delete"
-        android:icon="@drawable/ic_delete"
+        android:icon="@drawable/free_icon_font_trash_xmark_10741775"
         android:title="Удалить"
         android:showAsAction="always" />
     <item

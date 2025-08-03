@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
         setupBottomNavigation()
         checkAndRequestPermissions()
         // Устанавливаем второй пункт меню как выбранный

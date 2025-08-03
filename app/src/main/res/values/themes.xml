@@ -7,6 +7,13 @@
 
     <style name="Theme.AlarmKotlin" parent="Base.Theme.AlarmKotlin" />
 
+    <style name="BottomNavigationView.NoSelection" parent="Widget.Design.BottomNavigationView">
+        <item name="itemBackground">@android:color/transparent</item>
+        <item name="itemRippleColor">@android:color/transparent</item>
+        <item name="elevation">0dp</item>
+        <item name="android:background">@drawable/navigation_bg</item>
+    </style>
+
 
     <!-- Полноэкранная тема для AlarmActivity -->
     <style name="Theme.AlarmKotlin.FullScreen" parent="Theme.AlarmKotlin">
