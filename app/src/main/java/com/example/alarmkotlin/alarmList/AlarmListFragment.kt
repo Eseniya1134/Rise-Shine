@@ -140,9 +140,14 @@ class AlarmListFragment : Fragment() {
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
             mode?.menuInflater?.inflate(R.menu.menu_selection, menu)
+
+
+
             adapter.isSelectionMode = true
             return true
         }
+
+
 
         override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?) = false
 
