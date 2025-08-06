@@ -137,7 +137,7 @@ class AlarmActivity : AppCompatActivity() {
             if (binding.answer.text.equals(trueAnsw)){
                 dismissAlarm()
             }
-            binding.answer.text = "Ваш ответ неверный"
+            binding.answer.setText("Ваш ответ неверный")  // для EditText
         }
 
         // Автоматическое отключение через 10 минут
