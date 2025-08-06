@@ -13,6 +13,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.example.alarmkotlin.alarmList.QwestionList
 import com.example.alarmkotlin.databinding.ActivityAlarmBinding
 import com.example.alarmkotlin.databinding.ActivityMainBinding
 
@@ -23,10 +24,12 @@ import com.example.alarmkotlin.databinding.ActivityMainBinding
 class AlarmActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAlarmBinding
     private var mediaPlayer: MediaPlayer? = null
+    private lateinit var trueAnsw: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("AlarmDebug", "AlarmActivity открыт!")
+
 
         // Настройки для показа поверх экрана блокировки
         setupWindowFlags()
@@ -34,6 +37,7 @@ class AlarmActivity : AppCompatActivity() {
         binding = ActivityAlarmBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        getQwest()
         // Запускаем звук
         startAlarmSound()
 
@@ -130,7 +134,10 @@ class AlarmActivity : AppCompatActivity() {
 
         //отключение по кнопке стоп
         binding.stopBtn.setOnClickListener{btn ->
-            dismissAlarm()
+            if (binding.answer.text.equals(trueAnsw)){
+                dismissAlarm()
+            }
+            binding.answer.text = "Ваш ответ неверный"
         }
 
         // Автоматическое отключение через 10 минут
@@ -173,6 +180,16 @@ class AlarmActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopAlarmSound()
+    }
+
+    /**
+     * Получение задачи и ответа для будильников
+     */
+    private fun getQwest(){
+        var list = QwestionList()
+        binding.question.text = list.getQuestion()
+        trueAnsw = list.getAnswer()
+
     }
 
     // Предотвращаем закрытие кнопкой "Назад" случайно
