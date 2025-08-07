@@ -9,6 +9,8 @@ import android.widget.TextView
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alarmkotlin.R
+import com.example.alarmkotlin.alarmList.data.AlarmDao
+import com.example.alarmkotlin.alarmList.data.AlarmDatabase
 import com.example.alarmkotlin.alarmList.data.AlarmItem
 import com.example.alarmkotlin.timer.TimerFragment
 
@@ -24,10 +26,12 @@ class AlarmAdapter(
     private val onItemClick: (AlarmItem) -> Unit,
     private val onToggle: (AlarmItem) -> Unit,
 
-) : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
+    ) : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
 
     private val selectedItems = mutableSetOf<AlarmItem>() // выбранные будильники
     var isSelectionMode = false                       // включен ли режим выбора
+    private lateinit var db: AlarmDatabase // База данных
+
 
     /**
      * ViewHolder для одного элемента списка будильников.
@@ -51,6 +55,7 @@ class AlarmAdapter(
      * Привязывает данные из списка alarms к конкретному ViewHolder'у.
      */
     override fun onBindViewHolder(holder: AlarmViewHolder, position: Int) {
+
         val alarm = alarms[position]
         holder.textTime.text = alarm.time // отображаем время будильника
         holder.switchEnabled.setOnCheckedChangeListener(null) // убираем старый слушатель
@@ -80,6 +85,8 @@ class AlarmAdapter(
                     .replace(R.id.frameAlarm, fragment)
                     .addToBackStack(null)
                     .commit()
+
+
             }
         }
 
