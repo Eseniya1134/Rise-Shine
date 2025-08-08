@@ -1,4 +1,4 @@
-package com.example.alarmkotlin.alarmList
+package com.example.alarmkotlin.alarmList.QuestionPackage
 
 import kotlin.random.Random
 
@@ -21,7 +21,6 @@ class EasyQuestionList {
             1 -> generateMathTask("+")
             2 -> generateMathTask("-")
             3 -> generateMathTask("*")
-            4 -> generateMathTask("/")
 
             // Загадки
             // Загадки в стихах
@@ -60,7 +59,7 @@ class EasyQuestionList {
                         "А вниз — никак не пойдет?",
                 "сосулька"
             )
-            12 -> setRiddle(
+            4 -> setRiddle(
                 "Белая вата\n" +
                         "Плывет куда-то.",
                 "облако"
@@ -79,7 +78,6 @@ class EasyQuestionList {
             "+" -> (a + b).toString()
             "-" -> (a - b).toString()
             "*" -> (a * b).toString()
-            "/" -> (a / b).toString()
             else -> "0"
         }
     }
