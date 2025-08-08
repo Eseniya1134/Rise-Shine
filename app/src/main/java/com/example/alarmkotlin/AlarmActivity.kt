@@ -133,11 +133,12 @@ class AlarmActivity : AppCompatActivity() {
     private fun setupDismissButton() {
 
         //отключение по кнопке стоп
-        binding.stopBtn.setOnClickListener{btn ->
-            if (binding.answer.text.equals(trueAnsw)){
+        binding.stopBtn.setOnClickListener { btn ->
+            val userAnswer = binding.answer.text.toString().trim() // преобразуем в String и убираем пробелы
+            if (userAnswer.equals(trueAnsw, ignoreCase = true)) { // добавляем ignoreCase для регистронезависимого сравнения
                 dismissAlarm()
             }
-            binding.answer.setText("")  // для EditText
+            binding.answer.setText("")
         }
 
         // Автоматическое отключение через 10 минут
