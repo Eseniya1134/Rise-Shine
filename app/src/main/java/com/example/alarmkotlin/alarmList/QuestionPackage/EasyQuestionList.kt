@@ -2,17 +2,26 @@ package com.example.alarmkotlin.alarmList.QuestionPackage
 
 import kotlin.random.Random
 
-class EasyQuestionList {
+class EasyQuestionList : QuestionList {
     private lateinit var question: String
     private lateinit var answer: String
 
-    fun getQuestion(): String {
+    override fun getQuestion(): String {
         generateQuestion()
         return question
     }
 
-    fun getAnswer(): String {
+    override fun getAnswer(): String {
         return answer
+    }
+
+    private fun easyGenerateQuestion(){
+        when (Random.nextInt(1, 11)) { // 10 вариантов (1-10)
+            // Математические примеры (сложение, вычитание, умножение, деление)
+            1 -> generateMathTask("+")
+            2 -> generateMathTask("-")
+            3 -> generateMathTask("*")
+        }
     }
 
     private fun generateQuestion() {
