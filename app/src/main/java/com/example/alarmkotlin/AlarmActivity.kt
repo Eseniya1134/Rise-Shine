@@ -13,7 +13,10 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.example.alarmkotlin.alarmList.QwestionList
+import com.example.alarmkotlin.alarmList.QuestionPackage.EasyQuestionList
+import com.example.alarmkotlin.alarmList.QuestionPackage.HardQuestionList
+import com.example.alarmkotlin.alarmList.QuestionPackage.MediumQuestionList
+import com.example.alarmkotlin.alarmList.QuestionPackage.QuestionList
 import com.example.alarmkotlin.databinding.ActivityAlarmBinding
 import com.example.alarmkotlin.databinding.ActivityMainBinding
 
@@ -37,7 +40,7 @@ class AlarmActivity : AppCompatActivity() {
         binding = ActivityAlarmBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        getQwest()
+        getQuest()
         // Запускаем звук
         startAlarmSound()
 
@@ -138,7 +141,7 @@ class AlarmActivity : AppCompatActivity() {
             if (userAnswer.equals(trueAnsw, ignoreCase = true)) { // добавляем ignoreCase для регистронезависимого сравнения
                 dismissAlarm()
             }else{
-                getQwest()
+                getQuest()
                 binding.answer.setText("")
             }
 
@@ -189,11 +192,19 @@ class AlarmActivity : AppCompatActivity() {
     /**
      * Получение задачи и ответа для будильников
      */
-    private fun getQwest(){
-        var list = QwestionList()
-        binding.question.text = list.getQuestion()
-        trueAnsw = list.getAnswer()
+    private fun getQuest() {
+        // Правильное получение Int (значение по умолчанию = 1)
+        val level = intent.getIntExtra("selected_difficulty", 1)
 
+        val provider = when(level) {
+            1 -> EasyQuestionList()
+            2 -> MediumQuestionList()
+            3 -> HardQuestionList()
+            else -> EasyQuestionList() // fallback
+        }
+
+        binding.question.text = provider.getQuestion()
+        trueAnsw = provider.getAnswer()
     }
 
     // Предотвращаем закрытие кнопкой "Назад" случайно

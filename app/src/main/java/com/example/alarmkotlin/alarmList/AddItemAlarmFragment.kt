@@ -35,6 +35,7 @@ class AddItemAlarmFragment : Fragment() {
     private lateinit var db: AlarmDatabase // База данных
     // Хранение URI выбранной мелодии
     private var selectedRingtoneUri: String? = null
+    private var difficultyLevel: Int? = null
 
     // Таймпикер для выбора времени
     private lateinit var picker: MaterialTimePicker
@@ -200,10 +201,11 @@ class AddItemAlarmFragment : Fragment() {
             val parts = timeText.split(":")
             val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
             val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
-            scheduleAlarm(requireContext(), hour, minute)
+
 
             // Получаем уровень сложности из спиннера
             val difficultyLevel = binding.spinnerDifficulty.selectedItemPosition + 1
+            scheduleAlarm(requireContext(), hour, minute, difficultyLevel)
 
             // Собираем все данные и передаём их обратно через FragmentResult
             val result = Bundle().apply {
@@ -230,13 +232,14 @@ class AddItemAlarmFragment : Fragment() {
     }
 
     // Метод установки будильника в AlarmManager
-    private fun scheduleAlarm(context: Context, hour: Int, minute: Int) {
+    private fun scheduleAlarm(context: Context, hour: Int, minute: Int, difficulty: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val requestCode = System.currentTimeMillis().toInt() // Уникальный ID будильника
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("selected_ringtone", selectedRingtoneUri) // Передаём выбранный рингтон
+            putExtra("selected_difficulty", difficulty)
             action = "ALARM_ACTION_$requestCode"
         }
 

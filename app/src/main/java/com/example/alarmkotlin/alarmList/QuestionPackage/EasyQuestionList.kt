@@ -15,14 +15,6 @@ class EasyQuestionList : QuestionList {
         return answer
     }
 
-    private fun easyGenerateQuestion(){
-        when (Random.nextInt(1, 11)) { // 10 вариантов (1-10)
-            // Математические примеры (сложение, вычитание, умножение, деление)
-            1 -> generateMathTask("+")
-            2 -> generateMathTask("-")
-            3 -> generateMathTask("*")
-        }
-    }
 
     private fun generateQuestion() {
         when (Random.nextInt(1, 11)) { // 10 вариантов (1-10)
@@ -78,21 +70,20 @@ class EasyQuestionList : QuestionList {
 
     /** Генерирует математический пример и автоматически вычисляет ответ */
     private fun generateMathTask(operator: String) {
-        val a = Random.nextInt(1, 10)
-        val b = Random.nextInt(1, 10)
-        val c: Int
+        var a = Random.nextInt(1, 10)
+        var b = Random.nextInt(1, 10)
+        var c: Int
 
-        if(a > b){
-            c = a - b
-        }else{
-            c = b -a
+        if(b > a){
+            c =a
+            a = b
+            b = c
         }
-
         question = "$a $operator $b = ?"
 
         answer = when (operator) {
             "+" -> (a + b).toString()
-            "-" -> (c).toString()
+            "-" -> (a - b).toString()
             "*" -> (a * b).toString()
             else -> "0"
         }

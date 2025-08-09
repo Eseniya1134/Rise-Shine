@@ -68,15 +68,17 @@ class AlarmReceiver : BroadcastReceiver() {
             }
         }
 
-        // 4. Получаем рингтон
+        // 4. Получаем рингтон \ уровень сложности
         val ringtoneUri = intent?.getStringExtra("selected_ringtone")
+        val difficulty = intent?.getIntExtra("selected_difficulty", 1) ?: 1
 
         // 5. Создаем уведомление с полноэкранным интентом
-        createFullScreenNotification(context, ringtoneUri)
+        createFullScreenNotification(context, ringtoneUri, difficulty)
 
         // 6. Запускаем Foreground Service для надежности
         val serviceIntent = Intent(context, AlarmService::class.java).apply {
             putExtra("selected_ringtone", ringtoneUri)
+            putExtra("selected_difficulty", difficulty)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -86,10 +88,10 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         // 7. Также пытаемся запустить активность напрямую
-        launchAlarmActivity(context, ringtoneUri)
+        launchAlarmActivity(context, ringtoneUri, difficulty)
     }
 
-    private fun createFullScreenNotification(context: Context, ringtoneUri: String?) {
+    private fun createFullScreenNotification(context: Context, ringtoneUri: String?, difficulty: Int) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Создаем канал уведомлений для Android 8+
@@ -113,6 +115,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("selected_ringtone", ringtoneUri)
+            putExtra("selected_difficulty", difficulty)
         }
 
         val fullScreenPendingIntent = PendingIntent.getActivity(
@@ -135,7 +138,7 @@ class AlarmReceiver : BroadcastReceiver() {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
-    private fun launchAlarmActivity(context: Context, ringtoneUri: String?) {
+    private fun launchAlarmActivity(context: Context, ringtoneUri: String?, difficulty: Int) {
         try {
             val alarmIntent = Intent(context, AlarmActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
@@ -143,6 +146,7 @@ class AlarmReceiver : BroadcastReceiver() {
                         Intent.FLAG_ACTIVITY_SINGLE_TOP or
                         Intent.FLAG_ACTIVITY_NO_HISTORY
                 putExtra("selected_ringtone", ringtoneUri)
+                putExtra("selected_difficulty", difficulty)
             }
 
             context.startActivity(alarmIntent)

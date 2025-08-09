@@ -2,7 +2,7 @@ package com.example.alarmkotlin.alarmList.QuestionPackage
 
 import kotlin.random.Random
 
-class DifficultQuestionList : QuestionList{
+class HardQuestionList : QuestionList{
     private lateinit var question: String
     private lateinit var answer: String
 
@@ -15,14 +15,6 @@ class DifficultQuestionList : QuestionList{
         return answer
     }
 
-    private fun easyGenerateQuestion(){
-        when (Random.nextInt(1, 11)) { // 10 вариантов (1-10)
-            // Математические примеры (сложение, вычитание, умножение, деление)
-            1 -> generateMathTask("+")
-            2 -> generateMathTask("-")
-            3 -> generateMathTask("*")
-        }
-    }
 
     private fun generateQuestion() {
         when (Random.nextInt(1, 11)) { // 10 вариантов (1-10)
@@ -80,18 +72,22 @@ class DifficultQuestionList : QuestionList{
 
     /** Генерирует математический пример и автоматически вычисляет ответ */
     private fun generateMathTask(operator: String) {
-        val a = Random.nextInt(1, 10)
-        val b = Random.nextInt(31, 50)
-        val c = Random.nextInt(31, 50)
+        var a = Random.nextInt(1, 10)
+        var b = Random.nextInt(31, 50)
+        var c = Random.nextInt(11, 50)
+        var d: Int
 
-        question = "$a $operator $b = ?"
 
         answer = when (operator) {
-            "+" -> (a + b).toString()
+            "+" -> {
+                a = c
+                (a + b).toString()}
             "-" -> (a - b).toString()
-            "*" -> (a * c).toString()
+            "*" -> (a * b).toString()
             else -> "0"
         }
+
+        question = "$a $operator $b = ?"
     }
 
     /** Устанавливает загадку и ответ */
