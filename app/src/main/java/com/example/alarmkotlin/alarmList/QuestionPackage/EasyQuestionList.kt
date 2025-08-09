@@ -80,12 +80,19 @@ class EasyQuestionList : QuestionList {
     private fun generateMathTask(operator: String) {
         val a = Random.nextInt(1, 10)
         val b = Random.nextInt(1, 10)
+        val c: Int
+
+        if(a > b){
+            c = a - b
+        }else{
+            c = b -a
+        }
 
         question = "$a $operator $b = ?"
 
         answer = when (operator) {
             "+" -> (a + b).toString()
-            "-" -> (a - b).toString()
+            "-" -> (c).toString()
             "*" -> (a * b).toString()
             else -> "0"
         }

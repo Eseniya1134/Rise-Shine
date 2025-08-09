@@ -137,8 +137,11 @@ class AlarmActivity : AppCompatActivity() {
             val userAnswer = binding.answer.text.toString().trim() // преобразуем в String и убираем пробелы
             if (userAnswer.equals(trueAnsw, ignoreCase = true)) { // добавляем ignoreCase для регистронезависимого сравнения
                 dismissAlarm()
+            }else{
+                getQwest()
+                binding.answer.setText("")
             }
-            binding.answer.setText("")
+
         }
 
         // Автоматическое отключение через 10 минут
