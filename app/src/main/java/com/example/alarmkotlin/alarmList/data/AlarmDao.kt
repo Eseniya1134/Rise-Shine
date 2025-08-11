@@ -5,6 +5,7 @@ import androidx.room.*
 @Dao
 interface AlarmDao {
 
+
     @Query("SELECT * FROM alarms")
     suspend fun getAllAlarms(): List<AlarmItem>
 

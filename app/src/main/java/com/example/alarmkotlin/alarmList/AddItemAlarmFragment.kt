@@ -36,6 +36,9 @@ class AddItemAlarmFragment : Fragment() {
     // Хранение URI выбранной мелодии
     private var selectedRingtoneUri: String? = null
     private var difficultyLevel: Int? = null
+    private var alarmId: Int? = null
+
+    private lateinit var adapter: AlarmAdapter
 
     // Таймпикер для выбора времени
     private lateinit var picker: MaterialTimePicker
@@ -52,7 +55,8 @@ class AddItemAlarmFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val alarmId = arguments?.getInt("alarm_id")
+        alarmId = arguments?.getInt("alarm_id")
+        Log.d("alarmId", alarmId.toString())
 
         //Загрузка уже имеющейся информации при редактировании
         lifecycleScope.launch {
@@ -148,6 +152,7 @@ class AddItemAlarmFragment : Fragment() {
             startActivityForResult(intent, RINGTONE_REQUEST_CODE)
         }
 
+
         // Обработчик кнопки "Сохранить будильник"
         binding.buttonSaveAlarm.setOnClickListener {
             var selectedTime = binding.chooseClock.text.toString()
@@ -205,7 +210,13 @@ class AddItemAlarmFragment : Fragment() {
 
             // Получаем уровень сложности из спиннера
             val difficultyLevel = binding.spinnerDifficulty.selectedItemPosition + 1
-            scheduleAlarm(requireContext(), hour, minute, difficultyLevel)
+
+            if (alarmId != null){
+                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, alarmId!!)
+            }else{
+                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, generId())
+            }
+
 
             // Собираем все данные и передаём их обратно через FragmentResult
             val result = Bundle().apply {
@@ -232,10 +243,24 @@ class AddItemAlarmFragment : Fragment() {
     }
 
     // Метод установки будильника в AlarmManager
-    private fun scheduleAlarm(context: Context, hour: Int, minute: Int, difficulty: Int) {
+    private fun scheduleAlarm(context: Context, hour: Int, minute: Int, difficulty: Int, id: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        val requestCode = System.currentTimeMillis().toInt() // Уникальный ID будильника
+        if (alarmId != null){
+            lifecycleScope.launch {
+                // 1. Получаем будильник по ID
+                val alarmToDelete = db.alarmDao().getAlarmById(id)
+
+                // 2. Если будильник найден - удаляем
+                alarmToDelete?.let { alarm ->
+                    // Удаляем из БД
+                    db.alarmDao().deleteAlarm(alarm)
+                }
+            }
+        }
+
+
+        val  requestCode = id;
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("selected_ringtone", selectedRingtoneUri) // Передаём выбранный рингтон
@@ -269,6 +294,11 @@ class AddItemAlarmFragment : Fragment() {
             calendar.timeInMillis,
             pendingIntent
         )
+    }
+
+    private fun generId(): Int{
+        val requestCode = System.currentTimeMillis().toInt() // Уникальный ID будильника
+        return  requestCode
     }
 
     // Освобождаем ресурсы ViewBinding
