@@ -58,6 +58,25 @@ class AddItemAlarmFragment : Fragment() {
         alarmId = arguments?.getInt("alarm_id")
         Log.d("alarmId", alarmId.toString())
 
+        // Инициализация дней недели с прозрачностью 0.5f для нового будильника
+        val daysView = listOf(
+            binding.textMon to "Mon",
+            binding.textTue to "Tue",
+            binding.textWed to "Wed",
+            binding.textThu to "Thu",
+            binding.textFri to "Fri",
+            binding.textSat to "Sat",
+            binding.textSun to "Sun"
+        )
+
+        // Для нового будильника устанавливаем все дни с прозрачностью 0.5f
+        if (alarmId == null) {
+            daysView.forEach { (textView, _) ->
+                textView.alpha = 0.5f
+            }
+        }
+
+
         //Загрузка уже имеющейся информации при редактировании
         lifecycleScope.launch {
             db = AlarmDatabase.getDatabase(requireContext())
