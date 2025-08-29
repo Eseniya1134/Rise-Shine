@@ -70,6 +70,7 @@ class AddItemAlarmFragment : Fragment() {
                 val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
                 val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
 
+
                 picker = MaterialTimePicker.Builder()
                     .setTimeFormat(TimeFormat.CLOCK_24H)
                     .setHour(hour)
@@ -212,9 +213,9 @@ class AddItemAlarmFragment : Fragment() {
             val difficultyLevel = binding.spinnerDifficulty.selectedItemPosition + 1
 
             if (alarmId != null){
-                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, alarmId!!)
+                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, alarmId!!, selectedDays.joinToString(","))
             }else{
-                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, generId())
+                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, generId(), selectedDays.joinToString(","))
             }
 
 
@@ -243,7 +244,7 @@ class AddItemAlarmFragment : Fragment() {
     }
 
     // Метод установки будильника в AlarmManager
-    private fun scheduleAlarm(context: Context, hour: Int, minute: Int, difficulty: Int, id: Int) {
+    private fun scheduleAlarm(context: Context, hour: Int, minute: Int, difficulty: Int, id: Int, daysOfWeek: String) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         if (alarmId != null){
@@ -265,6 +266,7 @@ class AddItemAlarmFragment : Fragment() {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("selected_ringtone", selectedRingtoneUri) // Передаём выбранный рингтон
             putExtra("selected_difficulty", difficulty)
+            putExtra("selected_days", daysOfWeek)
             action = "ALARM_ACTION_$requestCode"
         }
 

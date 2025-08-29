@@ -1,6 +1,9 @@
 package com.example.alarmkotlin
 
+import android.app.AlarmManager
 import android.app.KeyguardManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -13,12 +16,14 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.example.alarmkotlin.alarmList.AlarmReceiver
 import com.example.alarmkotlin.alarmList.QuestionPackage.EasyQuestionList
 import com.example.alarmkotlin.alarmList.QuestionPackage.HardQuestionList
 import com.example.alarmkotlin.alarmList.QuestionPackage.MediumQuestionList
 import com.example.alarmkotlin.alarmList.QuestionPackage.QuestionList
 import com.example.alarmkotlin.databinding.ActivityAlarmBinding
 import com.example.alarmkotlin.databinding.ActivityMainBinding
+import java.util.Calendar
 
 /**
  * AlarmActivity - экран будильника, отображается поверх блокировки
@@ -33,12 +38,14 @@ class AlarmActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         Log.d("AlarmDebug", "AlarmActivity открыт!")
 
-
         // Настройки для показа поверх экрана блокировки
         setupWindowFlags()
 
         binding = ActivityAlarmBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Проверяем причину срабатывания (сравниваем текущий день с выбранным)
+        checkAlarmDayReason()
 
         getQuest()
         // Запускаем звук
@@ -157,9 +164,131 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun dismissAlarm() { //отключение будильника
         Log.d("AlarmDebug", "Закрываем будильник")
+
+        // Получаем данные из intent для автоповтора
+        val selectedDays = intent.getStringExtra("selected_days") ?: ""
+        val ringtoneUri = intent.getStringExtra("selected_ringtone")
+        val difficulty = intent.getIntExtra("selected_difficulty", 1)
+
+        // Если выбраны определенные дни недели - перепланируем будильник на следующую неделю
+        if (selectedDays.isNotBlank()) {
+            scheduleNextWeekAlarm(selectedDays, ringtoneUri, difficulty)
+        }
+
         stopAlarmSound()
         finish()
     }
+
+    /**
+     * Планирует будильник на следующую неделю для тех же дней (автоповтор)
+     */
+    private fun scheduleNextWeekAlarm(selectedDays: String, ringtoneUri: String?, difficulty: Int) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val daysList = selectedDays.split(",").filter { it.isNotBlank() }
+
+        // Получаем время из текущего intent
+        val currentTime = intent.getStringExtra("alarm_time") ?: "07:00"
+        val parts = currentTime.split(":")
+        val hour = parts.getOrNull(0)?.toIntOrNull() ?: 7
+        val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+        // Сопоставление кодов дней с Calendar константами
+        val dayMapping = mapOf(
+            "Mon" to Calendar.MONDAY,
+            "Tue" to Calendar.TUESDAY,
+            "Wed" to Calendar.WEDNESDAY,
+            "Thu" to Calendar.THURSDAY,
+            "Fri" to Calendar.FRIDAY,
+            "Sat" to Calendar.SATURDAY,
+            "Sun" to Calendar.SUNDAY
+        )
+
+        var alarmCount = 0
+        val baseId = intent.getIntExtra("alarm_id", System.currentTimeMillis().toInt())
+
+        // Устанавливаем будильник для каждого выбранного дня недели
+        for (dayCode in daysList) {
+            val targetDayOfWeek = dayMapping[dayCode] ?: continue
+
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.WEEK_OF_YEAR, 1) // Следующая неделя
+
+            // Находим нужный день недели на следующей неделе
+            val currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+            val daysUntilTarget = targetDayOfWeek - currentDayOfWeek
+            calendar.add(Calendar.DAY_OF_MONTH, daysUntilTarget)
+
+            calendar.set(Calendar.HOUR_OF_DAY, hour)
+            calendar.set(Calendar.MINUTE, minute)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+
+            // Уникальный requestCode для каждого дня недели
+            val requestCode = baseId * 10 + alarmCount
+
+            val newIntent = Intent(this, AlarmReceiver::class.java).apply {
+                putExtra("selected_ringtone", ringtoneUri)
+                putExtra("selected_difficulty", difficulty)
+                putExtra("selected_days", selectedDays)
+                putExtra("alarm_time", currentTime)
+                putExtra("target_day", dayCode) // Конкретный день для проверки
+                action = "ALARM_ACTION_$requestCode"
+            }
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                this,
+                requestCode,
+                newIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            // Устанавливаем точное срабатывание
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+
+            Log.d("AlarmDebug", "Автоповтор: будильник установлен на следующий $dayCode: ${calendar.time}")
+            alarmCount++
+        }
+    }
+
+
+    /**
+     * Проверка, совпадает ли день недели будильника с сегодняшним
+     */
+    private fun checkAlarmDayReason() {
+        val selectedDays = intent.getStringExtra("selected_days") ?: ""
+        if (selectedDays.isBlank()) {
+            Log.d("AlarmDebug", "Будильник сработал без выбранных дней (одноразовый).")
+            return
+        }
+
+        val today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+
+        val dayMapping = mapOf(
+            "Mon" to Calendar.MONDAY,
+            "Tue" to Calendar.TUESDAY,
+            "Wed" to Calendar.WEDNESDAY,
+            "Thu" to Calendar.THURSDAY,
+            "Fri" to Calendar.FRIDAY,
+            "Sat" to Calendar.SATURDAY,
+            "Sun" to Calendar.SUNDAY
+        )
+
+        // Проверяем все выбранные дни
+        val matchedDay = dayMapping.entries.firstOrNull { (code, calConst) ->
+            selectedDays.contains(code) && today == calConst
+        }
+
+        if (matchedDay != null) {
+            Log.d("AlarmDebug", "✅ Будильник сработал, потому что сегодня ${matchedDay.key}")
+        } else {
+            Log.w("AlarmDebug", "⚠ Будильник сработал, но сегодняшний день не совпадает с выбранными ($selectedDays)")
+        }
+    }
+
 
     private fun stopAlarmSound() {  //остановка воспроизведения звука
         mediaPlayer?.let {
@@ -211,6 +340,6 @@ class AlarmActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         super.onBackPressed()
-       // dismissAlarm()
+        // dismissAlarm()
     }
 }

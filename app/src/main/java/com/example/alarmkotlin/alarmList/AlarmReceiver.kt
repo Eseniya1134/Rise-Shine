@@ -1,5 +1,6 @@
 package com.example.alarmkotlin.alarmList
 
+import android.app.AlarmManager
 import android.app.KeyguardManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -14,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import com.example.alarmkotlin.AlarmActivity
 import com.example.alarmkotlin.alarmList.AlarmService
 import com.example.alarmkotlin.R
+import java.util.Calendar
 
 /**
  * AlarmReceiver — обновленный для работы на современных версиях Android
@@ -44,6 +46,61 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     private fun handleAlarmTrigger(context: Context, intent: Intent?) {
+        // Получаем выбранные дни недели из intent
+        val selectedDaysStr = intent?.getStringExtra("selected_days") ?: ""
+
+        // Если дни недели не указаны - запускаем будильник (как раньше)
+        if (selectedDaysStr.isEmpty()) {
+            Log.d("AlarmDebug", "Дни недели не указаны, запускаем будильник")
+            proceedWithAlarm(context, intent)
+            return
+        }
+
+        // Проверяем, должен ли будильник сработать сегодня
+        if (shouldAlarmTriggerToday(selectedDaysStr)) {
+            Log.d("AlarmDebug", "Будильник должен сработать сегодня")
+            proceedWithAlarm(context, intent)
+
+            // После срабатывания планируем на следующую неделю
+            scheduleNextWeekAlarm(context, intent)
+        } else {
+            Log.d("AlarmDebug", "Будильник НЕ должен сработать сегодня")
+            // Если это был неправильный день - просто игнорируем
+        }
+    }
+
+    /**
+     * Проверяет, должен ли будильник сработать сегодня
+     */
+    private fun shouldAlarmTriggerToday(selectedDaysStr: String): Boolean {
+        val selectedDays = selectedDaysStr.split(",").filter { it.isNotBlank() }
+
+        if (selectedDays.isEmpty()) {
+            return true // Если дни не указаны - срабатываем каждый день
+        }
+
+        // Получаем текущий день недели
+        val calendar = Calendar.getInstance()
+        val currentDayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
+            Calendar.MONDAY -> "Mon"
+            Calendar.TUESDAY -> "Tue"
+            Calendar.WEDNESDAY -> "Wed"
+            Calendar.THURSDAY -> "Thu"
+            Calendar.FRIDAY -> "Fri"
+            Calendar.SATURDAY -> "Sat"
+            Calendar.SUNDAY -> "Sun"
+            else -> ""
+        }
+
+        Log.d("AlarmDebug", "Текущий день: $currentDayOfWeek, выбранные дни: $selectedDays")
+
+        return currentDayOfWeek in selectedDays
+    }
+
+    /**
+     * Основная логика запуска будильника (вынесена из handleAlarmTrigger)
+     */
+    private fun proceedWithAlarm(context: Context, intent: Intent?) {
         // 1. Получаем PowerManager для "пробуждения" устройства
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
 
@@ -71,14 +128,16 @@ class AlarmReceiver : BroadcastReceiver() {
         // 4. Получаем рингтон \ уровень сложности
         val ringtoneUri = intent?.getStringExtra("selected_ringtone")
         val difficulty = intent?.getIntExtra("selected_difficulty", 1) ?: 1
+        val daysOfWeek = intent?.getStringExtra("selected_days").toString()
 
         // 5. Создаем уведомление с полноэкранным интентом
-        createFullScreenNotification(context, ringtoneUri, difficulty)
+        createFullScreenNotification(context, ringtoneUri, difficulty, daysOfWeek)
 
         // 6. Запускаем Foreground Service для надежности
         val serviceIntent = Intent(context, AlarmService::class.java).apply {
             putExtra("selected_ringtone", ringtoneUri)
             putExtra("selected_difficulty", difficulty)
+            putExtra("selected_days", daysOfWeek)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -88,10 +147,80 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         // 7. Также пытаемся запустить активность напрямую
-        launchAlarmActivity(context, ringtoneUri, difficulty)
+        launchAlarmActivity(context, ringtoneUri, difficulty, daysOfWeek)
     }
 
-    private fun createFullScreenNotification(context: Context, ringtoneUri: String?, difficulty: Int) {
+    /**
+     * Планирует будильник на следующую неделю (автоповтор)
+     */
+    private fun scheduleNextWeekAlarm(context: Context, intent: Intent?) {
+        val selectedDaysStr = intent?.getStringExtra("selected_days") ?: ""
+        val ringtoneUri = intent?.getStringExtra("selected_ringtone")
+        val difficulty = intent?.getIntExtra("selected_difficulty", 1) ?: 1
+        val timeStr = intent?.getStringExtra("alarm_time") ?: "07:00"
+        val targetDay = intent?.getStringExtra("target_day") ?: ""
+
+        val parts = timeStr.split(":")
+        val hour = parts.getOrNull(0)?.toIntOrNull() ?: 7
+        val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+        // Сопоставление кодов дней с Calendar константами
+        val dayMapping = mapOf(
+            "Mon" to Calendar.MONDAY,
+            "Tue" to Calendar.TUESDAY,
+            "Wed" to Calendar.WEDNESDAY,
+            "Thu" to Calendar.THURSDAY,
+            "Fri" to Calendar.FRIDAY,
+            "Sat" to Calendar.SATURDAY,
+            "Sun" to Calendar.SUNDAY
+        )
+
+        val targetDayOfWeek = dayMapping[targetDay] ?: return
+
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.WEEK_OF_YEAR, 1) // +1 неделя
+
+        // Находим нужный день недели на следующей неделе
+        val currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+        val daysUntilTarget = targetDayOfWeek - currentDayOfWeek
+        calendar.add(Calendar.DAY_OF_MONTH, daysUntilTarget)
+
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        calendar.set(Calendar.MINUTE, minute)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+
+        // Создаем новый PendingIntent с тем же requestCode для повторения
+        val requestCode = intent?.action?.substringAfter("ALARM_ACTION_")?.toIntOrNull() ?: return
+
+        val newIntent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra("selected_ringtone", ringtoneUri)
+            putExtra("selected_difficulty", difficulty)
+            putExtra("selected_days", selectedDaysStr)
+            putExtra("alarm_time", timeStr)
+            putExtra("target_day", targetDay)
+            action = "ALARM_ACTION_$requestCode"
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            newIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Устанавливаем будильник на следующий такой же день
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent
+        )
+
+        Log.d("AlarmDebug", "Автоповтор: будильник установлен на следующий $targetDay: ${calendar.time}")
+    }
+
+    private fun createFullScreenNotification(context: Context, ringtoneUri: String?, difficulty: Int, daysOfWeek: String) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Создаем канал уведомлений для Android 8+
@@ -116,6 +245,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("selected_ringtone", ringtoneUri)
             putExtra("selected_difficulty", difficulty)
+            putExtra("selected_days", daysOfWeek)
         }
 
         val fullScreenPendingIntent = PendingIntent.getActivity(
@@ -138,7 +268,7 @@ class AlarmReceiver : BroadcastReceiver() {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
-    private fun launchAlarmActivity(context: Context, ringtoneUri: String?, difficulty: Int) {
+    private fun launchAlarmActivity(context: Context, ringtoneUri: String?, difficulty: Int, daysOfWeek: String) {
         try {
             val alarmIntent = Intent(context, AlarmActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
@@ -147,6 +277,7 @@ class AlarmReceiver : BroadcastReceiver() {
                         Intent.FLAG_ACTIVITY_NO_HISTORY
                 putExtra("selected_ringtone", ringtoneUri)
                 putExtra("selected_difficulty", difficulty)
+                putExtra("selected_days", daysOfWeek)
             }
 
             context.startActivity(alarmIntent)

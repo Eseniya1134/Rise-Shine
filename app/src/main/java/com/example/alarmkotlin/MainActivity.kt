@@ -59,18 +59,21 @@ class MainActivity : AppCompatActivity() {
                     supportFragmentManager.beginTransaction()
                         .replace(R.id.frameAlarm, StopwatchFragment())
                         .commit()
+                    binding.titleAlarm.text = "Секундомер"
                     true
                 }
                 R.id.alarmList-> {
                     supportFragmentManager.beginTransaction()
                         .replace(R.id.frameAlarm, AlarmListFragment())
                         .commit()
+                    binding.titleAlarm.text = "Будильник"
                     true
                 }
                 R.id.timer-> {
                     supportFragmentManager.beginTransaction()
                         .replace(R.id.frameAlarm, TimerFragment())
                         .commit()
+                    binding.titleAlarm.text = "Таймер"
                     true
                 }
                 else -> false

@@ -10,7 +10,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewAlarms"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="690dp"
         android:layout_weight="1" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="11dp"
+        android:layout_marginBottom="51dp"
         app:backgroundTint="@color/icon"
         app:srcCompat="@drawable/outline_add_2_24"
         app:tint="@color/bgMenu"/>
