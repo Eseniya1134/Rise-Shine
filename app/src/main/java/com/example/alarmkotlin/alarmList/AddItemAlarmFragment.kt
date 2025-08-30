@@ -58,118 +58,18 @@ class AddItemAlarmFragment : Fragment() {
         alarmId = arguments?.getInt("alarm_id")
         Log.d("alarmId", alarmId.toString())
 
-        // Инициализация дней недели с прозрачностью 0.5f для нового будильника
-        val daysView = listOf(
-            binding.textMon to "Mon",
-            binding.textTue to "Tue",
-            binding.textWed to "Wed",
-            binding.textThu to "Thu",
-            binding.textFri to "Fri",
-            binding.textSat to "Sat",
-            binding.textSun to "Sun"
-        )
 
-        // Для нового будильника устанавливаем все дни с прозрачностью 0.5f
-        if (alarmId == null) {
-            daysView.forEach { (textView, _) ->
-                textView.alpha = 0.5f
-            }
-        }
+        initDayViewsForNewAlarm() //0.5f для нового будильника
+        loadAlarmData() //Загрузка уже имеющейся информации при редактировании
 
-
-        //Загрузка уже имеющейся информации при редактировании
-        lifecycleScope.launch {
-            db = AlarmDatabase.getDatabase(requireContext())
-            val alarm = alarmId?.let { db.alarmDao().getAlarmById(it) }
-
-            alarm?.let {
-                binding.chooseClock.text = it.time
-
-                val parts = it.time.split(":")
-                val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
-                val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
-
-
-                picker = MaterialTimePicker.Builder()
-                    .setTimeFormat(TimeFormat.CLOCK_24H)
-                    .setHour(hour)
-                    .setMinute(minute)
-                    .setTitleText("Выберите время для будильника")
-                    .build()
-
-                selectedRingtoneUri = it.ringtoneUri
-
-                val savedDays = it.daysOfWeek.split(",")
-                selectedDays.addAll(savedDays)
-
-                val dayViews = listOf(
-                    binding.textMon to "Mon",
-                    binding.textTue to "Tue",
-                    binding.textWed to "Wed",
-                    binding.textThu to "Thu",
-                    binding.textFri to "Fri",
-                    binding.textSat to "Sat",
-                    binding.textSun to "Sun"
-                )
-                for ((view, code) in dayViews) {
-                    view.alpha = if (code in selectedDays) 1.0f else 0.5f
-                }
-
-                binding.spinnerDifficulty.setSelection(it.difficultyLevel - 1)
-            }
-        }
-
-
-        // Обработчик нажатия на кнопку выбора времени
         binding.chooseClock.setOnClickListener {
-            // Создание диалога выбора времени
-            picker = MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H) // 24-часовой формат
-                .setHour(12)
-                .setMinute(0)
-                .setTitleText("Выберите время для будильника")
-                .build()
-
-            // Обработка выбора времени
-            picker.addOnPositiveButtonClickListener {
-                val formattedTime = String.format("%02d:%02d", picker.hour, picker.minute)
-                binding.chooseClock.text = formattedTime // Отображаем выбранное время на кнопке
-            }
-
-            picker.show(parentFragmentManager, "tag_picker")
-
+            initTimePicker()  // Обработчик нажатия на кнопку выбора времени
         }
 
-        // Обработка выбора дней недели (подсвечивание и сохранение)
-        val dayViews = listOf(
-            binding.textMon to "Mon",
-            binding.textTue to "Tue",
-            binding.textWed to "Wed",
-            binding.textThu to "Thu",
-            binding.textFri to "Fri",
-            binding.textSat to "Sat",
-            binding.textSun to "Sun"
-        )
+        initDaysPicker() // Обработка выбора дней недели (подсвечивание и сохранение)
 
-        for ((textView, dayCode) in dayViews) {
-            textView.setOnClickListener {
-                if (selectedDays.contains(dayCode)) {
-                    selectedDays.remove(dayCode)
-                    textView.alpha = 0.5f // Неактивный день
-                } else {
-                    selectedDays.add(dayCode)
-                    textView.alpha = 1.0f // Активный день
-                }
-            }
-        }
-
-        // Обработчик кнопки выбора мелодии
         binding.buttonChooseRingtone.setOnClickListener {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "audio/*"
-            }
-            startActivityForResult(intent, RINGTONE_REQUEST_CODE)
+            chooseRingtone() // Обработчик кнопки выбора мелодии
         }
 
 
@@ -178,10 +78,7 @@ class AddItemAlarmFragment : Fragment() {
             var selectedTime = binding.chooseClock.text.toString()
 
             if (!selectedTime.contains(":") || !::picker.isInitialized) {
-                selectedTime = "07:00"
-                binding.chooseClock.text = selectedTime
-                //Toast.makeText(requireContext(), "Пожалуйста, выберите время", Toast.LENGTH_SHORT).show()
-                //return@setOnClickListener
+                binding.chooseClock.text = "07:00"
             }
 
             // Проверка разрешения на точные будильники (Android 12+)
@@ -251,13 +148,86 @@ class AddItemAlarmFragment : Fragment() {
         }
     }
 
+
+    // Метод извлекает имя файла из Uri (если возможно — из метаданных, иначе из пути)
+    private fun getFileNameFromUri(uri: Uri): String {
+        var name: String? = null
+        try {
+            context?.contentResolver?.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0) name = cursor.getString(index)
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e("FileAccess", "SecurityException при получении имени файла: ${e.message}")
+            // Fallback - пытаемся получить имя из последнего сегмента URI
+            name = uri.lastPathSegment
+        } catch (e: Exception) {
+            Log.e("FileAccess", "Ошибка при получении имени файла: ${e.message}")
+            name = uri.lastPathSegment
+        }
+        return name ?: "unknown_file"
+    }
+
+
+
+    //выбор рингтона
+    private fun chooseRingtone() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "audio/*"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+        startActivityForResult(intent, RINGTONE_REQUEST_CODE)
+    }
+
+    //выбор дней недели
+    private fun initDaysPicker() {
+        val dayViews = listOf(
+            binding.textMon to "Mon",
+            binding.textTue to "Tue",
+            binding.textWed to "Wed",
+            binding.textThu to "Thu",
+            binding.textFri to "Fri",
+            binding.textSat to "Sat",
+            binding.textSun to "Sun"
+        )
+
+        for ((textView, dayCode) in dayViews) {
+            textView.setOnClickListener {
+                if (selectedDays.contains(dayCode)) {
+                    selectedDays.remove(dayCode)
+                    textView.alpha = 0.5f // Неактивный день
+                } else {
+                    selectedDays.add(dayCode)
+                    textView.alpha = 1.0f // Активный день
+                }
+            }
+        }
+    }
+
     // Обработка результата выбора мелодии
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RINGTONE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             data?.data?.let { uri ->
-                selectedRingtoneUri = uri.toString()
-                Toast.makeText(requireContext(), "Выбрана мелодия", Toast.LENGTH_SHORT).show()
+                try {
+                    // Получаем постоянные права доступа к URI
+                    requireContext().contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                    selectedRingtoneUri = uri.toString()
+                    binding.buttonChooseRingtone.text = getFileNameFromUri(uri)
+                    Toast.makeText(requireContext(), "Выбрана мелодия", Toast.LENGTH_SHORT).show()
+                } catch (e: SecurityException) {
+                    Log.e("FileAccess", "Не удалось получить постоянные права доступа: ${e.message}")
+                    selectedRingtoneUri = uri.toString()
+                    binding.buttonChooseRingtone.text = getFileNameFromUri(uri)
+                    Toast.makeText(requireContext(), "Выбрана мелодия", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -315,6 +285,99 @@ class AddItemAlarmFragment : Fragment() {
             calendar.timeInMillis,
             pendingIntent
         )
+    }
+
+    //Загрузка уже имеющейся информации при редактировании
+    private fun loadAlarmData(){
+        lifecycleScope.launch {
+            db = AlarmDatabase.getDatabase(requireContext())
+            val alarm = alarmId?.let { db.alarmDao().getAlarmById(it) }
+
+            // Проверка, что binding ещё валиден
+            if (_binding == null) return@launch
+
+            alarm?.let {
+                binding.chooseClock.text = it.time
+
+                val parts = it.time.split(":")
+                val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
+                val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+
+                picker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(hour)
+                    .setMinute(minute)
+                    .setTitleText("Выберите время для будильника")
+                    .build()
+
+                selectedRingtoneUri = it.ringtoneUri
+                if (!selectedRingtoneUri.isNullOrEmpty()) {
+                    try {
+                        binding.buttonChooseRingtone.text = getFileNameFromUri(Uri.parse(selectedRingtoneUri))
+                    } catch (e: Exception) {
+                        Log.e("FileAccess", "Ошибка при загрузке имени файла: ${e.message}")
+                        binding.buttonChooseRingtone.text = "Мелодия выбрана"
+                    }
+                }
+
+                val savedDays = it.daysOfWeek.split(",").filter { day -> day.isNotEmpty() }
+                selectedDays.addAll(savedDays)
+
+                val dayViews = listOf(
+                    binding.textMon to "Mon",
+                    binding.textTue to "Tue",
+                    binding.textWed to "Wed",
+                    binding.textThu to "Thu",
+                    binding.textFri to "Fri",
+                    binding.textSat to "Sat",
+                    binding.textSun to "Sun"
+                )
+                for ((view, code) in dayViews) {
+                    view.alpha = if (code in selectedDays) 1.0f else 0.5f
+                }
+
+                binding.spinnerDifficulty.setSelection(it.difficultyLevel - 1)
+            }
+        }
+    }
+
+    // Инициализация дней недели с прозрачностью 0.5f для нового будильника
+    private fun initDayViewsForNewAlarm(){
+        val daysView = listOf(
+            binding.textMon to "Mon",
+            binding.textTue to "Tue",
+            binding.textWed to "Wed",
+            binding.textThu to "Thu",
+            binding.textFri to "Fri",
+            binding.textSat to "Sat",
+            binding.textSun to "Sun"
+        )
+
+        // Для нового будильника устанавливаем все дни с прозрачностью 0.5f
+        if (alarmId == null) {
+            daysView.forEach { (textView, _) ->
+                textView.alpha = 0.5f
+            }
+        }
+    }
+
+    // Создание диалога выбора времени
+    private fun initTimePicker(){
+        picker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_24H) // 24-часовой формат
+            .setHour(12)
+            .setMinute(0)
+            .setTitleText("Выберите время для будильника")
+            .build()
+
+        // Обработка выбора времени
+        picker.addOnPositiveButtonClickListener {
+            val formattedTime = String.format("%02d:%02d", picker.hour, picker.minute)
+            binding.chooseClock.text = formattedTime // Отображаем выбранное время на кнопке
+        }
+
+        picker.show(parentFragmentManager, "tag_picker")
     }
 
     private fun generId(): Int{

@@ -53,11 +53,14 @@
         </LinearLayout>
 
         <!-- Выбор мелодии -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/button_choose_ringtone"
             android:layout_width="wrap_content"
+            app:backgroundTint="@null"
             android:layout_height="wrap_content"
+            android:background="@drawable/dashed_bg"
             android:text="Выбрать мелодию"
+            android:textColor="@color/selIcon"
             app:layout_constraintTop_toBottomOf="@+id/week_days_layout"
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="24dp"/>

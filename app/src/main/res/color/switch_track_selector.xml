@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Включенное состояние -->
-    <item android:state_checked="true" android:color="@color/icon" />
+    <item android:state_checked="true" android:color="@color/off" />
     <!-- Выключенное состояние -->
-    <item android:color="@color/selIcon" />
+    <item android:color="@color/bgMenu" />
 </selector>
