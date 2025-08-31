@@ -194,13 +194,13 @@ class AlarmActivity : AppCompatActivity() {
 
         // Сопоставление кодов дней с Calendar константами
         val dayMapping = mapOf(
-            "Mon" to Calendar.MONDAY,
-            "Tue" to Calendar.TUESDAY,
-            "Wed" to Calendar.WEDNESDAY,
-            "Thu" to Calendar.THURSDAY,
-            "Fri" to Calendar.FRIDAY,
-            "Sat" to Calendar.SATURDAY,
-            "Sun" to Calendar.SUNDAY
+            "Пн" to Calendar.MONDAY,
+            "Вт" to Calendar.TUESDAY,
+            "Ср" to Calendar.WEDNESDAY,
+            "Чт" to Calendar.THURSDAY,
+            "Пт" to Calendar.FRIDAY,
+            "Сб" to Calendar.SATURDAY,
+            "Вс" to Calendar.SUNDAY
         )
 
         var alarmCount = 0
@@ -268,13 +268,13 @@ class AlarmActivity : AppCompatActivity() {
         val today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 
         val dayMapping = mapOf(
-            "Mon" to Calendar.MONDAY,
-            "Tue" to Calendar.TUESDAY,
-            "Wed" to Calendar.WEDNESDAY,
-            "Thu" to Calendar.THURSDAY,
-            "Fri" to Calendar.FRIDAY,
-            "Sat" to Calendar.SATURDAY,
-            "Sun" to Calendar.SUNDAY
+            "Пн" to Calendar.MONDAY,
+            "Вт" to Calendar.TUESDAY,
+            "Ср" to Calendar.WEDNESDAY,
+            "Чт" to Calendar.THURSDAY,
+            "Пт" to Calendar.FRIDAY,
+            "Сб" to Calendar.SATURDAY,
+            "Вс" to Calendar.SUNDAY
         )
 
         // Проверяем все выбранные дни

@@ -37,11 +37,12 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/textDay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="TextView"
-        app:layout_constraintTop_toBottomOf="@+id/switchEnabled"
-        tools:layout_editor_absoluteX="316dp" />
+        android:layout_marginEnd="16dp"
+        android:textColor="@color/bgMenu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switchEnabled" />
 </androidx.constraintlayout.widget.ConstraintLayout>

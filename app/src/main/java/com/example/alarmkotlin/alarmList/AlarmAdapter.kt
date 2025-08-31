@@ -39,6 +39,7 @@ class AlarmAdapter(
      */
     inner class AlarmViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val textTime: TextView = itemView.findViewById(R.id.textTime) // отображает время будильника
+        val textDay: TextView = itemView.findViewById(R.id.textDay)
         val switchEnabled: Switch = itemView.findViewById(R.id.switchEnabled) // переключатель включён/выключен
     }
 
@@ -59,6 +60,12 @@ class AlarmAdapter(
         val alarm = alarms[position]
         holder.textTime.text = alarm.time // отображаем время будильника
         holder.switchEnabled.setOnCheckedChangeListener(null) // убираем старый слушатель
+
+        if (alarm.daysOfWeek.isEmpty()){
+            holder.textDay.text = "ежедневно"
+        }else{
+            holder.textDay.text = alarm.daysOfWeek
+        }
 
         holder.switchEnabled.isChecked = alarm.isEnabled // устанавливаем текущее состояние переключателя
 

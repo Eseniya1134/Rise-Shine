@@ -184,13 +184,13 @@ class AddItemAlarmFragment : Fragment() {
     //выбор дней недели
     private fun initDaysPicker() {
         val dayViews = listOf(
-            binding.textMon to "Mon",
-            binding.textTue to "Tue",
-            binding.textWed to "Wed",
-            binding.textThu to "Thu",
-            binding.textFri to "Fri",
-            binding.textSat to "Sat",
-            binding.textSun to "Sun"
+            binding.textMon to "Пн",
+            binding.textTue to "Вт",
+            binding.textWed to "Ср",
+            binding.textThu to "Чт",
+            binding.textFri to "Пт",
+            binding.textSat to "Сб",
+            binding.textSun to "Вс"
         )
 
         for ((textView, dayCode) in dayViews) {
@@ -326,13 +326,13 @@ class AddItemAlarmFragment : Fragment() {
                 selectedDays.addAll(savedDays)
 
                 val dayViews = listOf(
-                    binding.textMon to "Mon",
-                    binding.textTue to "Tue",
-                    binding.textWed to "Wed",
-                    binding.textThu to "Thu",
-                    binding.textFri to "Fri",
-                    binding.textSat to "Sat",
-                    binding.textSun to "Sun"
+                    binding.textMon to "Пн",
+                    binding.textTue to "Вт",
+                    binding.textWed to "Ср",
+                    binding.textThu to "Чт",
+                    binding.textFri to "Пт",
+                    binding.textSat to "Сб",
+                    binding.textSun to "Вс"
                 )
                 for ((view, code) in dayViews) {
                     view.alpha = if (code in selectedDays) 1.0f else 0.5f
@@ -346,13 +346,13 @@ class AddItemAlarmFragment : Fragment() {
     // Инициализация дней недели с прозрачностью 0.5f для нового будильника
     private fun initDayViewsForNewAlarm(){
         val daysView = listOf(
-            binding.textMon to "Mon",
-            binding.textTue to "Tue",
-            binding.textWed to "Wed",
-            binding.textThu to "Thu",
-            binding.textFri to "Fri",
-            binding.textSat to "Sat",
-            binding.textSun to "Sun"
+            binding.textMon to "Пн",
+            binding.textTue to "Вт",
+            binding.textWed to "Ср",
+            binding.textThu to "Чт",
+            binding.textFri to "Пт",
+            binding.textSat to "Сб",
+            binding.textSun to "Вс"
         )
 
         // Для нового будильника устанавливаем все дни с прозрачностью 0.5f
