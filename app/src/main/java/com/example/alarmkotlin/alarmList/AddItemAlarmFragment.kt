@@ -170,8 +170,6 @@ class AddItemAlarmFragment : Fragment() {
         return name ?: "unknown_file"
     }
 
-
-
     //выбор рингтона
     private fun chooseRingtone() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -220,7 +218,8 @@ class AddItemAlarmFragment : Fragment() {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                     )
                     selectedRingtoneUri = uri.toString()
-                    binding.buttonChooseRingtone.text = getFileNameFromUri(uri)
+                    binding.nameRing.text = getFileNameFromUri(uri)
+                    binding.buttonChooseRingtone.text = "Изменить мелодию"
                     Toast.makeText(requireContext(), "Выбрана мелодия", Toast.LENGTH_SHORT).show()
                 } catch (e: SecurityException) {
                     Log.e("FileAccess", "Не удалось получить постоянные права доступа: ${e.message}")
@@ -314,7 +313,9 @@ class AddItemAlarmFragment : Fragment() {
                 selectedRingtoneUri = it.ringtoneUri
                 if (!selectedRingtoneUri.isNullOrEmpty()) {
                     try {
-                        binding.buttonChooseRingtone.text = getFileNameFromUri(Uri.parse(selectedRingtoneUri))
+
+                        binding.nameRing.text = getFileNameFromUri(Uri.parse(selectedRingtoneUri))
+                        binding.buttonChooseRingtone.text = "Изменить мелодию"
                     } catch (e: Exception) {
                         Log.e("FileAccess", "Ошибка при загрузке имени файла: ${e.message}")
                         binding.buttonChooseRingtone.text = "Мелодия выбрана"
