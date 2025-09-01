@@ -82,13 +82,13 @@ class AlarmReceiver : BroadcastReceiver() {
         // Получаем текущий день недели
         val calendar = Calendar.getInstance()
         val currentDayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
-            Calendar.MONDAY -> "Mon"
-            Calendar.TUESDAY -> "Tue"
-            Calendar.WEDNESDAY -> "Wed"
-            Calendar.THURSDAY -> "Thu"
-            Calendar.FRIDAY -> "Fri"
-            Calendar.SATURDAY -> "Sat"
-            Calendar.SUNDAY -> "Sun"
+            Calendar.MONDAY -> "Пн"
+            Calendar.TUESDAY -> "Вт"
+            Calendar.WEDNESDAY -> "Ср"
+            Calendar.THURSDAY -> "Чт"
+            Calendar.FRIDAY -> "Пт"
+            Calendar.SATURDAY -> "Сб"
+            Calendar.SUNDAY -> "Вс"
             else -> ""
         }
 
@@ -166,13 +166,13 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // Сопоставление кодов дней с Calendar константами
         val dayMapping = mapOf(
-            "Mon" to Calendar.MONDAY,
-            "Tue" to Calendar.TUESDAY,
-            "Wed" to Calendar.WEDNESDAY,
-            "Thu" to Calendar.THURSDAY,
-            "Fri" to Calendar.FRIDAY,
-            "Sat" to Calendar.SATURDAY,
-            "Sun" to Calendar.SUNDAY
+            "Пн" to Calendar.MONDAY,
+            "Вт" to Calendar.TUESDAY,
+            "Ср" to Calendar.WEDNESDAY,
+            "Чт" to Calendar.THURSDAY,
+            "Пт" to Calendar.FRIDAY,
+            "Сб" to Calendar.SATURDAY,
+            "Вс" to Calendar.SUNDAY
         )
 
         val targetDayOfWeek = dayMapping[targetDay] ?: return

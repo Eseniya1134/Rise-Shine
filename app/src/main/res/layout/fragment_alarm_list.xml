@@ -21,7 +21,7 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="51dp"
         app:backgroundTint="@color/icon"
-        app:srcCompat="@drawable/outline_add_2_24"
+        app:srcCompat="@drawable/added_cl"
         app:tint="@color/bgMenu"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

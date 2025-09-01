@@ -5,11 +5,12 @@
     <color name="blue">#168C83</color>
     
     <!-- Оттенки для приложения -->
+    <color name="icon">#A0E2CAD8</color>
     <color name="bg">#27425D</color>
     <color name="off">#87A7D0</color>
 
     <color name="offThumb">#0E1B48</color>
     <color name="bgMenu">#0E1F2F</color>
-    <color name="icon">#E2CAD8</color>
+
     <color name="selIcon">#D779C0</color>
 </resources>
