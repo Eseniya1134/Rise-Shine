@@ -18,7 +18,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:text="07:00"
-        android:textColor="@color/bg"
+        android:textColor="@color/bgMenu"
         android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
