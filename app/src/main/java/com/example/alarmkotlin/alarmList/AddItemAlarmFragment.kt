@@ -129,9 +129,10 @@ class AddItemAlarmFragment : Fragment() {
             val difficultyLevel = binding.spinnerDifficulty.selectedItemPosition + 1
 
             if (alarmId != null){
-                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, alarmId!!, selectedDays.joinToString(","))
+                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, alarmId!!, selectedDays.joinToString(","), timeText)
             }else{
-                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, generId(), selectedDays.joinToString(","))
+                val newId = generId()
+                scheduleAlarm(requireContext(), hour, minute, difficultyLevel, newId, selectedDays.joinToString(","), timeText)
             }
 
 
@@ -231,30 +232,51 @@ class AddItemAlarmFragment : Fragment() {
         }
     }
 
-    // Метод установки будильника в AlarmManager
-    private fun scheduleAlarm(context: Context, hour: Int, minute: Int, difficulty: Int, id: Int, daysOfWeek: String) {
+    /**
+     * Метод установки будильника в AlarmManager
+     * ИСПРАВЛЕНО: добавлен параметр timeText для передачи времени в Intent
+     */
+    private fun scheduleAlarm(context: Context, hour: Int, minute: Int, difficulty: Int, id: Int, daysOfWeek: String, timeText: String) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
+        // ИСПРАВЛЕНО: если редактируем существующий будильник - сначала удаляем старый
         if (alarmId != null){
             lifecycleScope.launch {
                 // 1. Получаем будильник по ID
                 val alarmToDelete = db.alarmDao().getAlarmById(id)
 
-                // 2. Если будильник найден - удаляем
+                // 2. Если будильник найден - отменяем его в AlarmManager
                 alarmToDelete?.let { alarm ->
+                    val cancelIntent = Intent(context, AlarmReceiver::class.java).apply {
+                        action = "ALARM_ACTION_$id"
+                    }
+                    val cancelPendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        id,
+                        cancelIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    // Отменяем в AlarmManager
+                    alarmManager.cancel(cancelPendingIntent)
+                    Log.d("AlarmDebug", "Старый будильник отменен в AlarmManager")
+
                     // Удаляем из БД
                     db.alarmDao().deleteAlarm(alarm)
+                    Log.d("AlarmDebug", "Старый будильник удален из БД")
                 }
             }
         }
 
+        val requestCode = id
 
-        val  requestCode = id;
-
+        // ИСПРАВЛЕНО: добавляем alarm_time и alarm_request_code в Intent
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("selected_ringtone", selectedRingtoneUri) // Передаём выбранный рингтон
             putExtra("selected_difficulty", difficulty)
             putExtra("selected_days", daysOfWeek)
+            putExtra("alarm_time", timeText) // ДОБАВЛЕНО: передаем время будильника
+            putExtra("alarm_request_code", requestCode.toString()) // ДОБАВЛЕНО: передаем requestCode
             action = "ALARM_ACTION_$requestCode"
         }
 
@@ -265,18 +287,70 @@ class AddItemAlarmFragment : Fragment() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Устанавливаем время срабатывания будильника
+        // ИСПРАВЛЕНО: улучшена логика определения времени срабатывания
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-            if (before(Calendar.getInstance())) {
-                add(Calendar.DAY_OF_MONTH, 1) // Если время уже прошло — на следующий день
-            }
         }
 
-        Log.d("AlarmDebug", "Будильник запланирован на: ${calendar.time}")
+        val now = Calendar.getInstance()
+        val selectedDaysList = daysOfWeek.split(",").filter { it.isNotBlank() }
+
+        // Если выбраны конкретные дни недели
+        if (selectedDaysList.isNotEmpty()) {
+            // Проверяем, может ли будильник сработать сегодня
+            val todayDayOfWeek = when (now.get(Calendar.DAY_OF_WEEK)) {
+                Calendar.MONDAY -> "Пн"
+                Calendar.TUESDAY -> "Вт"
+                Calendar.WEDNESDAY -> "Ср"
+                Calendar.THURSDAY -> "Чт"
+                Calendar.FRIDAY -> "Пт"
+                Calendar.SATURDAY -> "Сб"
+                Calendar.SUNDAY -> "Вс"
+                else -> ""
+            }
+
+            // Если сегодня подходящий день и время еще не прошло
+            if (todayDayOfWeek in selectedDaysList && calendar.timeInMillis > now.timeInMillis) {
+                Log.d("AlarmDebug", "Будильник запланирован на сегодня: ${calendar.time}")
+            } else {
+                // Ищем ближайший подходящий день
+                var foundDay = false
+                for (i in 1..7) {
+                    calendar.add(Calendar.DAY_OF_MONTH, 1)
+                    val dayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
+                        Calendar.MONDAY -> "Пн"
+                        Calendar.TUESDAY -> "Вт"
+                        Calendar.WEDNESDAY -> "Ср"
+                        Calendar.THURSDAY -> "Чт"
+                        Calendar.FRIDAY -> "Пт"
+                        Calendar.SATURDAY -> "Сб"
+                        Calendar.SUNDAY -> "Вс"
+                        else -> ""
+                    }
+
+                    if (dayOfWeek in selectedDaysList) {
+                        foundDay = true
+                        Log.d("AlarmDebug", "Будильник запланирован на $dayOfWeek: ${calendar.time}")
+                        break
+                    }
+                }
+
+                if (!foundDay) {
+                    Log.e("AlarmDebug", "Не удалось найти подходящий день для будильника")
+                    Toast.makeText(context, "Ошибка: не удалось запланировать будильник", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+        } else {
+            // Если дни не выбраны - одноразовый будильник
+            if (calendar.before(now)) {
+                calendar.add(Calendar.DAY_OF_MONTH, 1) // Если время уже прошло — на следующий день
+            }
+            Log.d("AlarmDebug", "Одноразовый будильник запланирован на: ${calendar.time}")
+        }
 
         // Установка точного срабатывания, даже в режиме сна
         alarmManager.setExactAndAllowWhileIdle(
@@ -284,6 +358,8 @@ class AddItemAlarmFragment : Fragment() {
             calendar.timeInMillis,
             pendingIntent
         )
+
+        Log.d("AlarmDebug", "Будильник успешно установлен в AlarmManager")
     }
 
     //Загрузка уже имеющейся информации при редактировании
@@ -381,9 +457,15 @@ class AddItemAlarmFragment : Fragment() {
         picker.show(parentFragmentManager, "tag_picker")
     }
 
+    // ИСПРАВЛЕНО: добавлена инициализация БД в методе генерации ID
     private fun generId(): Int{
+        // Инициализируем БД если еще не инициализирована
+        if (!::db.isInitialized) {
+            db = AlarmDatabase.getDatabase(requireContext())
+        }
+
         val requestCode = System.currentTimeMillis().toInt() // Уникальный ID будильника
-        return  requestCode
+        return requestCode
     }
 
     // Освобождаем ресурсы ViewBinding

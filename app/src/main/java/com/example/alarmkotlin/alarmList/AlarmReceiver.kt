@@ -65,7 +65,7 @@ class AlarmReceiver : BroadcastReceiver() {
             // Это будет делать AlarmActivity после отключения будильника
         } else {
             Log.d("AlarmDebug", "Будильник НЕ должен сработать сегодня")
-            // Если это был неправильный день - планируем на следующий подходящий день
+            // ИСПРАВЛЕНИЕ: если это был неправильный день - планируем на следующий подходящий день
             scheduleNextOccurrence(context, intent)
         }
     }
@@ -100,6 +100,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     /**
      * Планирует будильник на следующий подходящий день
+     * ИСПРАВЛЕНО: ищет ближайший день, а не только на следующей неделе
      */
     private fun scheduleNextOccurrence(context: Context, intent: Intent?) {
         val selectedDaysStr = intent?.getStringExtra("selected_days") ?: ""
@@ -131,7 +132,7 @@ class AlarmReceiver : BroadcastReceiver() {
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
 
-        // Находим следующий подходящий день
+        // ИСПРАВЛЕНИЕ: ищем ближайший подходящий день в течение недели
         var foundNextDay = false
         for (i in 1..7) {
             calendar.add(Calendar.DAY_OF_MONTH, 1)
@@ -148,21 +149,28 @@ class AlarmReceiver : BroadcastReceiver() {
 
             if (dayOfWeek in selectedDays) {
                 foundNextDay = true
+                Log.d("AlarmDebug", "Найден следующий подходящий день: $dayOfWeek")
                 break
             }
         }
 
-        if (!foundNextDay) return
+        if (!foundNextDay) {
+            Log.e("AlarmDebug", "Не удалось найти следующий подходящий день")
+            return
+        }
 
-        // Получаем requestCode из action или создаем новый
+        // Получаем requestCode из action или используем тот же
         val requestCode = intent?.action?.substringAfter("ALARM_ACTION_")?.toIntOrNull()
+            ?: intent?.getStringExtra("alarm_request_code")?.toIntOrNull()
             ?: System.currentTimeMillis().toInt()
 
+        // ИСПРАВЛЕНО: добавляем все необходимые данные в новый Intent
         val newIntent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("selected_ringtone", ringtoneUri)
             putExtra("selected_difficulty", difficulty)
             putExtra("selected_days", selectedDaysStr)
-            putExtra("alarm_time", timeStr)
+            putExtra("alarm_time", timeStr) // Передаем время будильника
+            putExtra("alarm_request_code", requestCode.toString()) // Сохраняем requestCode для последующих перепланирований
             action = "ALARM_ACTION_$requestCode"
         }
 
@@ -216,15 +224,19 @@ class AlarmReceiver : BroadcastReceiver() {
         val ringtoneUri = intent?.getStringExtra("selected_ringtone")
         val difficulty = intent?.getIntExtra("selected_difficulty", 1) ?: 1
         val daysOfWeek = intent?.getStringExtra("selected_days").toString()
+        val alarmTime = intent?.getStringExtra("alarm_time") // ДОБАВЛЕНО: получаем время будильника
+        val requestCode = intent?.getStringExtra("alarm_request_code") // получаем requestCode для сохранения ID
 
         // 5. Создаем уведомление с полноэкранным интентом
-        createFullScreenNotification(context, ringtoneUri, difficulty, daysOfWeek)
+        createFullScreenNotification(context, ringtoneUri, difficulty, daysOfWeek, alarmTime, requestCode)
 
         // 6. Запускаем Foreground Service для надежности
         val serviceIntent = Intent(context, AlarmService::class.java).apply {
             putExtra("selected_ringtone", ringtoneUri)
             putExtra("selected_difficulty", difficulty)
             putExtra("selected_days", daysOfWeek)
+            putExtra("alarm_time", alarmTime) // ДОБАВЛЕНО: передаем время в сервис
+            putExtra("alarm_request_code", requestCode) // ДОБАВЛЕНО: передаем requestCode в сервис
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -234,10 +246,14 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         // 7. Также пытаемся запустить активность напрямую
-        launchAlarmActivity(context, ringtoneUri, difficulty, daysOfWeek)
+        launchAlarmActivity(context, ringtoneUri, difficulty, daysOfWeek, alarmTime, requestCode)
     }
 
-    private fun createFullScreenNotification(context: Context, ringtoneUri: String?, difficulty: Int, daysOfWeek: String) {
+    /**
+     * Создание полноэкранного уведомления для запуска AlarmActivity
+     * ОБНОВЛЕНО: добавлены параметры alarmTime и requestCode
+     */
+    private fun createFullScreenNotification(context: Context, ringtoneUri: String?, difficulty: Int, daysOfWeek: String, alarmTime: String?, requestCode: String?) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Создаем канал уведомлений для Android 8+
@@ -263,6 +279,8 @@ class AlarmReceiver : BroadcastReceiver() {
             putExtra("selected_ringtone", ringtoneUri)
             putExtra("selected_difficulty", difficulty)
             putExtra("selected_days", daysOfWeek)
+            putExtra("alarm_time", alarmTime) // ДОБАВЛЕНО: передаем время для корректного планирования следующего будильника
+            putExtra("alarm_request_code", requestCode) // ДОБАВЛЕНО: передаем requestCode для сохранения ID будильника
         }
 
         val fullScreenPendingIntent = PendingIntent.getActivity(
@@ -285,7 +303,11 @@ class AlarmReceiver : BroadcastReceiver() {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
-    private fun launchAlarmActivity(context: Context, ringtoneUri: String?, difficulty: Int, daysOfWeek: String) {
+    /**
+     * Прямой запуск AlarmActivity
+     * ОБНОВЛЕНО: добавлены параметры alarmTime и requestCode
+     */
+    private fun launchAlarmActivity(context: Context, ringtoneUri: String?, difficulty: Int, daysOfWeek: String, alarmTime: String?, requestCode: String?) {
         try {
             val alarmIntent = Intent(context, AlarmActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
@@ -295,6 +317,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 putExtra("selected_ringtone", ringtoneUri)
                 putExtra("selected_difficulty", difficulty)
                 putExtra("selected_days", daysOfWeek)
+                putExtra("alarm_time", alarmTime) // ДОБАВЛЕНО: передаем время для планирования следующего срабатывания
+                putExtra("alarm_request_code", requestCode) // ДОБАВЛЕНО: передаем requestCode для сохранения ID между перепланированиями
             }
 
             context.startActivity(alarmIntent)

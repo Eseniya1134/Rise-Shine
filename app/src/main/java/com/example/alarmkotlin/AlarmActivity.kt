@@ -179,6 +179,7 @@ class AlarmActivity : AppCompatActivity() {
 
     /**
      * Планирует будильник на следующее срабатывание (для повторяющихся будильников)
+     * ИСПРАВЛЕНО: теперь ищет ближайший подходящий день, а не только на следующей неделе
      */
     private fun scheduleNextAlarmOccurrence(selectedDays: String) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -211,24 +212,45 @@ class AlarmActivity : AppCompatActivity() {
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
 
-        // Находим следующий подходящий день
+        // ИСПРАВЛЕНИЕ: ищем ближайший подходящий день (включая сегодня, если время еще не прошло)
         var foundNextDay = false
-        for (i in 1..7) {
-            calendar.add(Calendar.DAY_OF_MONTH, 1)
-            val dayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
-                Calendar.MONDAY -> "Пн"
-                Calendar.TUESDAY -> "Вт"
-                Calendar.WEDNESDAY -> "Ср"
-                Calendar.THURSDAY -> "Чт"
-                Calendar.FRIDAY -> "Пт"
-                Calendar.SATURDAY -> "Сб"
-                Calendar.SUNDAY -> "Вс"
-                else -> ""
-            }
+        val now = Calendar.getInstance()
 
-            if (dayOfWeek in selectedDaysList) {
-                foundNextDay = true
-                break
+        // Проверяем, может ли будильник сработать сегодня позже
+        val todayDayOfWeek = when (now.get(Calendar.DAY_OF_WEEK)) {
+            Calendar.MONDAY -> "Пн"
+            Calendar.TUESDAY -> "Вт"
+            Calendar.WEDNESDAY -> "Ср"
+            Calendar.THURSDAY -> "Чт"
+            Calendar.FRIDAY -> "Пт"
+            Calendar.SATURDAY -> "Сб"
+            Calendar.SUNDAY -> "Вс"
+            else -> ""
+        }
+
+        // Если сегодня подходящий день и время еще не прошло
+        if (todayDayOfWeek in selectedDaysList && calendar.timeInMillis > now.timeInMillis) {
+            foundNextDay = true
+            Log.d("AlarmDebug", "Будильник запланирован на сегодня позже")
+        } else {
+            // Ищем следующий подходящий день в течение недели
+            for (i in 1..7) {
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+                val dayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
+                    Calendar.MONDAY -> "Пн"
+                    Calendar.TUESDAY -> "Вт"
+                    Calendar.WEDNESDAY -> "Ср"
+                    Calendar.THURSDAY -> "Чт"
+                    Calendar.FRIDAY -> "Пт"
+                    Calendar.SATURDAY -> "Сб"
+                    Calendar.SUNDAY -> "Вс"
+                    else -> ""
+                }
+
+                if (dayOfWeek in selectedDaysList) {
+                    foundNextDay = true
+                    break
+                }
             }
         }
 
@@ -237,14 +259,16 @@ class AlarmActivity : AppCompatActivity() {
             return
         }
 
-        // Создаем уникальный requestCode на основе времени
-        val requestCode = System.currentTimeMillis().toInt()
+        // Получаем requestCode из текущего intent или создаем новый
+        val requestCode = intent.getStringExtra("alarm_request_code")?.toIntOrNull()
+            ?: System.currentTimeMillis().toInt()
 
         val newIntent = Intent(this, AlarmReceiver::class.java).apply {
             putExtra("selected_ringtone", ringtoneUri)
             putExtra("selected_difficulty", difficulty)
             putExtra("selected_days", selectedDays)
             putExtra("alarm_time", currentTime)
+            putExtra("alarm_request_code", requestCode.toString()) // Сохраняем requestCode
             action = "ALARM_ACTION_$requestCode"
         }
 
