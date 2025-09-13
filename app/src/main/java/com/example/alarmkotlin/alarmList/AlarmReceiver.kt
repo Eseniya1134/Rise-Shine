@@ -77,7 +77,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val selectedDays = selectedDaysStr.split(",").filter { it.isNotBlank() }
 
         if (selectedDays.isEmpty()) {
-            return true // Если дни не указаны - срабатываем каждый день
+            return true // Если дни не указаны - каждый день
         }
 
         // Получаем текущий день недели
