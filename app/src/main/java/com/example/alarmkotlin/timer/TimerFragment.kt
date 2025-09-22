@@ -130,12 +130,14 @@ class TimerFragment : Fragment() {
             .setTitle("Установить таймер")
             .setView(dialogView)
             .setPositiveButton("OK") { _, _ ->
-                val minutes = dialogView.findViewById<EditText>(R.id.editMinutes).text.toString()
+                val hour = dialogView.findViewById<EditText>(R.id.hour_txt).text.toString()
                     .toIntOrNull() ?: 0
-                val seconds = dialogView.findViewById<EditText>(R.id.editSeconds).text.toString()
+                val minutes = dialogView.findViewById<EditText>(R.id.minute_txt).text.toString()
+                    .toIntOrNull() ?: 0
+                val seconds = dialogView.findViewById<EditText>(R.id.second_txt).text.toString()
                     .toIntOrNull() ?: 0
 
-                val totalMillis = (minutes * 60 + seconds) * 1000L
+                val totalMillis = (hour*3600+ minutes * 60 + seconds) * 1000L
                 Toast.makeText(
                     requireContext(),
                     "Таймер: $minutes мин $seconds сек",
