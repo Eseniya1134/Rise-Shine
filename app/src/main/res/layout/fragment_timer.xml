@@ -7,10 +7,11 @@
     tools:context=".timer.TimerFragment">
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/choose_timer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Здесь будет Таймер"
+        android:text="00:00:00"
+        android:textSize="34sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
