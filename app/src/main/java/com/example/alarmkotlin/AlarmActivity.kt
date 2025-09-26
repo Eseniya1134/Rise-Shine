@@ -317,7 +317,7 @@ class AlarmActivity : AppCompatActivity() {
         }
 
         if (matchedDay != null) {
-            Log.d("AlarmDebug", "✅ Будильник сработал, потому что сегодня ${matchedDay.key}")
+            Log.d("AlarmDebug", "Будильник сработал, потому что сегодня ${matchedDay.key}")
         } else {
             Log.w("AlarmDebug", "⚠ Будильник сработал, но сегодняшний день не совпадает с выбранными ($selectedDays)")
         }
